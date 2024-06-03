@@ -11,7 +11,11 @@ export const getRandomJokesByTopic = query({
     const randomTopic = topics[Math.floor(Math.random() * topics.length)];
 
     // Step 3: Fetch jokes that belong to the selected topic
-    const jokes = await ctx.db.query("jokes").filter(q => q.eq(q.field("topic"), randomTopic._id)).collect();
+    const jokes = await ctx.db.query("jokes")
+    .withIndex("by_topic", (q) =>
+      q
+        .eq("topic", randomTopic._id)
+    ).collect();
 
     // Step 4: Shuffle the jokes and select the requested number of jokes
     const shuffled = jokes.sort(() => 0.5 - Math.random());
@@ -57,7 +61,7 @@ export const getTopJokes = query({
     const assocv3Map = new Map(validAssocv3s.map(assocv3 => [assocv3?._id, assocv3?.text]));
 
 
-    
+
     // Attach topic names and policy info to jokes
     const jokesWithDetails = sortedJokes.map(joke => ({
       ...joke,

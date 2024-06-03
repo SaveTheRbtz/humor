@@ -41,4 +41,5 @@ export default defineSchema({
         assocv2: v.id("assocv2"),
         assocv3: v.id("assocv3"),
     })
+    .index("by_topic", ["topic"])
 });
