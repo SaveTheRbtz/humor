@@ -4,7 +4,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../convex/_generated/api";
 
 const Compare: React.FC = () => {
-  const getRandomJokesQuery = useQuery(api.jokesQueries.getRandomJokes, { count: 2 });
+  const getRandomJokesQuery = useQuery(api.jokesQueries.getRandomJokesByTopic, { count: 2 });
   const updateJokes = useMutation(api.jokesMutations.updateJokes);
   const [selectedJoke, setSelectedJoke] = useState<number | 'neither' | null>(null);
 

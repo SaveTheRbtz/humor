@@ -1,10 +1,19 @@
 import { query } from "./_generated/server";
 import { v } from "convex/values";
 
-export const getRandomJokes = query({
+export const getRandomJokesByTopic = query({
   args: { count: v.number() },
   handler: async (ctx, args) => {
-    const jokes = await ctx.db.query("jokes").collect();
+    // Step 1: Fetch all topics
+    const topics = await ctx.db.query("topic").collect();
+
+    // Step 2: Select a random topic
+    const randomTopic = topics[Math.floor(Math.random() * topics.length)];
+
+    // Step 3: Fetch jokes that belong to the selected topic
+    const jokes = await ctx.db.query("jokes").filter(q => q.eq(q.field("topic"), randomTopic._id)).collect();
+
+    // Step 4: Shuffle the jokes and select the requested number of jokes
     const shuffled = jokes.sort(() => 0.5 - Math.random());
     return shuffled.slice(0, args.count);
   },
