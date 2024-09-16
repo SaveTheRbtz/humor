@@ -19,6 +19,19 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 )
 
+func allowCORS(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+		if r.Method == "OPTIONS" {
+			return
+		}
+		h.ServeHTTP(w, r)
+	})
+}
+
 func main() {
 	ctx := context.Background()
 
@@ -67,7 +80,8 @@ func main() {
 		logger.Fatal("Failed to register gRPC gateway", zap.Error(err))
 	}
 	logger.Info("Serving HTTP on localhost:8080")
-	if err := http.ListenAndServe(":8080", mux); err != nil {
+
+	if err := http.ListenAndServe(":8080", allowCORS(mux)); err != nil {
 		logger.Fatal("Failed to serve HTTP", zap.Error(err))
 	}
 }
