@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { ArenaApi, Configuration, V1GetChoicesResponse, V1Winner } from './apiClient';
-const config = new Configuration({ basePath: 'http://localhost:8080' });
+
+const apiBasePath = process.env.REACT_APP_API_BASE_URL || '';
+
+const config = new Configuration({ basePath: apiBasePath });
 const api = new ArenaApi(config);
 
 type Choice = {

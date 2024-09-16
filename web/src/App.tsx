@@ -1,5 +1,5 @@
 import React from 'react';
-import JokeComparison from './JokeComparison';
+import JokeComparison from './HumorArena';
 
 function App() {
   return (
