@@ -17,7 +17,7 @@ local_resource(
     serve_cmd='npm start',
     serve_dir='web',
     serve_env={'REACT_APP_API_BASE_URL': 'http://localhost:8080'},
-    deps=['web/src/**/*'],
+    deps=['web/src/'],
     resource_deps=['populate_database'],
 )
 
@@ -25,7 +25,7 @@ local_resource(
     'server',
     serve_cmd='go run server/cmd/server/main.go',
     serve_env={'FIRESTORE_EMULATOR_HOST': 'localhost:8081'},
-    deps=['server/**/*'],
+    deps=['server/'],
     resource_deps=['populate_database'],
 )
 

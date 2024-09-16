@@ -1,18 +1,32 @@
-FROM golang:1.23 as builder
+FROM golang:1.23 AS server-builder
+
+WORKDIR /code
+
+COPY go.mod go.sum ./
+COPY server/ ./server
+COPY gen ./gen
+
+RUN go mod download
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /server ./server/cmd/server/main.go
+
+FROM node:18 AS web-builder
+
+WORKDIR /code
+
+COPY web/ .
+
+RUN npm install
+RUN npm run build
+
+FROM alpine:latest AS app
 
 WORKDIR /app
 
-COPY go.mod go.sum ./
-RUN go mod download
-COPY .server gen ./
+COPY --from=server-builder /server .
+COPY --from=web-builder /code/build ./static
 
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o server ./server/cmd/main.go
-
-FROM alpine:latest
-
-WORKDIR /root/
-
-COPY --from=builder /app/server .
+# Dev container
+#ENV FIRESTORE_EMULATOR_HOST=host.docker.internal:8081
 
 EXPOSE 8080
 

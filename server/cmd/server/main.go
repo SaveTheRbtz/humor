@@ -73,15 +73,19 @@ func main() {
 		}
 	}()
 
-	mux := runtime.NewServeMux()
+	grpcMux := runtime.NewServeMux()
 	opts := []grpc.DialOption{grpc.WithInsecure()}
-	err = choicesv1.RegisterArenaHandlerFromEndpoint(ctx, mux, "localhost:9090", opts)
+	err = choicesv1.RegisterArenaHandlerFromEndpoint(ctx, grpcMux, "localhost:9090", opts)
 	if err != nil {
 		logger.Fatal("Failed to register gRPC gateway", zap.Error(err))
 	}
 	logger.Info("Serving HTTP on localhost:8080")
 
-	if err := http.ListenAndServe(":8080", allowCORS(mux)); err != nil {
+	mainMux := http.NewServeMux()
+	mainMux.Handle("/v1/", allowCORS(grpcMux))
+	mainMux.Handle("/", http.FileServer(http.Dir("./static")))
+
+	if err := http.ListenAndServe(":8080", mainMux); err != nil {
 		logger.Fatal("Failed to serve HTTP", zap.Error(err))
 	}
 }
