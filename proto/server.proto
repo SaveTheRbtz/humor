@@ -1,0 +1,66 @@
+syntax = "proto3";
+
+package choices.v1;
+
+option go_package = "github.com/SaveTheRbtz/humor/gen/go/choices/v1;choicesv1";
+
+import "google/api/annotations.proto";
+import "google/api/field_behavior.proto";
+
+// Arena service provides joke comparison functionalities.
+service Arena {
+  // Retrieves a pair of jokes for comparison.
+  rpc GetChoices(GetChoicesRequest) returns (GetChoicesResponse) {
+    option (google.api.http) = {
+      get : "/v1/choice"
+    };
+  }
+  // Submits the user's choice between two jokes.
+  rpc RateChoices(RateChoicesRequest) returns (RateChoicesResponse) {
+    option (google.api.http) = {
+      post : "/v1/choice/{id}/rate"
+      body : "*"
+    };
+  }
+}
+
+message GetChoicesRequest {
+  // TODO(rbtz): allow passing theme for jokes
+}
+
+message GetChoicesResponse {
+  // Unique identifier for the joke pair.
+  string id = 1;
+  // Theme for both jokes.
+  string theme = 2;
+  // Text of the left joke.
+  string left_joke = 3;
+  // Text of the right joke.
+  string right_joke = 4;
+}
+
+// Enumeration of possible user choices.
+enum Winner {
+  // Default unspecified value.
+  UNSPECIFIED = 0;
+  // User didn't like either joke.
+  NONE = 1;
+  // User chose the left joke.
+  LEFT = 2;
+  // User chose the right joke.
+  RIGHT = 3;
+  // User liked both jokes equally.
+  BOTH = 4;
+}
+
+// Request to rate the presented jokes.
+message RateChoicesRequest {
+  // Identifier of the joke pair being rated.
+  string id = 1 [(google.api.field_behavior) = REQUIRED];
+  // The user's selection.
+  Winner winner = 2;
+}
+
+message RateChoicesResponse {
+  // TODO(rbtz): return jokes generation parameters: model, policy, etc.
+}

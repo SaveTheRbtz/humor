@@ -1,0 +1,160 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "proto/server.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "Arena"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/v1/choice": {
+      "get": {
+        "summary": "Retrieves a pair of jokes for comparison.",
+        "operationId": "Arena_GetChoices",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetChoicesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "Arena"
+        ]
+      }
+    },
+    "/v1/choice/{id}/rate": {
+      "post": {
+        "summary": "Submits the user's choice between two jokes.",
+        "operationId": "Arena_RateChoices",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1RateChoicesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "description": "Identifier of the joke pair being rated.",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ArenaRateChoicesBody"
+            }
+          }
+        ],
+        "tags": [
+          "Arena"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "ArenaRateChoicesBody": {
+      "type": "object",
+      "properties": {
+        "winner": {
+          "$ref": "#/definitions/v1Winner",
+          "description": "The user's selection."
+        }
+      },
+      "description": "Request to rate the presented jokes."
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "v1GetChoicesResponse": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the joke pair."
+        },
+        "theme": {
+          "type": "string",
+          "description": "Theme for both jokes."
+        },
+        "leftJoke": {
+          "type": "string",
+          "description": "Text of the left joke."
+        },
+        "rightJoke": {
+          "type": "string",
+          "description": "Text of the right joke."
+        }
+      }
+    },
+    "v1RateChoicesResponse": {
+      "type": "object",
+      "description": "TODO(rbtz): return jokes generation parameters: model, policy, etc."
+    },
+    "v1Winner": {
+      "type": "string",
+      "enum": [
+        "UNSPECIFIED",
+        "NONE",
+        "LEFT",
+        "RIGHT",
+        "BOTH"
+      ],
+      "default": "UNSPECIFIED",
+      "description": "Enumeration of possible user choices.\n\n - UNSPECIFIED: Default unspecified value.\n - NONE: User didn't like either joke.\n - LEFT: User chose the left joke.\n - RIGHT: User chose the right joke.\n - BOTH: User liked both jokes equally."
+    }
+  }
+}
