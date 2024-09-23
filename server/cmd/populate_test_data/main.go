@@ -36,10 +36,15 @@ func main() {
 		{"Animals", "Why do cows have hooves instead of feet? Because they lactose."},
 		{"Animals", "What do you call a fish wearing a bowtie? Sofishticated."},
 		{"Animals", "Why did the chicken join a band? Because it had the drumsticks."},
+		{"Animals", "What do you call a bear with no teeth? A gummy bear."},
+		{"Technology", "Why do scientists trust atoms? Because they make up everything."},
 		{"Technology", "Why do programmers prefer dark mode? Because light attracts bugs."},
 		{"Technology", "How many programmers does it take to change a light bulb? None, it's a hardware problem."},
+		{"Technology", "Why do programmers always mix up Christmas and Halloween? Because Oct 31 == Dec 25."},
 		{"Food", "I'm on a seafood diet. I see food and I eat it."},
 		{"Food", "Why did the tomato turn red? Because it saw the salad dressing."},
+		{"Food", "What do you call cheese that isn't yours? Nacho cheese."},
+		{"Food", "Why did the coffee file a police report? It got mugged."},
 	}
 
 	themes := make(map[string]struct{})
