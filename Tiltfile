@@ -1,6 +1,6 @@
 local_resource(
     'firestore_emulator',
-    serve_cmd='gcloud emulators firestore start --host-port=localhost:8081 --quiet',
+    serve_cmd='gcloud emulators firestore start --host-port=localhost:8081',
     allow_parallel=True,
 )
 

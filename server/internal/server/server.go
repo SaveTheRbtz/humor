@@ -111,8 +111,9 @@ func (s *Server) GetChoices(ctx context.Context, req *choicesv1.GetChoicesReques
 
 	id := uuid.New().String()
 	choice := Choice{
+		SessionId: req.SessionId,
+
 		ThemeID:     themeDoc.Ref.ID,
-		SessionId:   req.SessionId,
 		LeftJokeID:  leftJokeDoc.Ref.ID,
 		RightJokeID: rightJokeDoc.Ref.ID,
 		CreatedAt:   time.Now(),

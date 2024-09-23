@@ -29,16 +29,6 @@ func main() {
 
 	rand.Seed(time.Now().UnixNano())
 
-	themes := []string{"Animals", "Technology", "Food"}
-	for _, themeName := range themes {
-		rnd := rand.Float64()
-		err := addTheme(ctx, client, themeName, rnd)
-		if err != nil {
-			log.Fatalf("Failed to add theme %s: %v", themeName, err)
-		}
-		fmt.Printf("Added theme: %f: %s\n", rnd, themeName)
-	}
-
 	jokes := []struct {
 		Theme string
 		Text  string
@@ -50,6 +40,20 @@ func main() {
 		{"Technology", "How many programmers does it take to change a light bulb? None, it's a hardware problem."},
 		{"Food", "I'm on a seafood diet. I see food and I eat it."},
 		{"Food", "Why did the tomato turn red? Because it saw the salad dressing."},
+	}
+
+	themes := make(map[string]struct{})
+	for _, joke := range jokes {
+		themes[joke.Theme] = struct{}{}
+	}
+
+	for themeName := range themes {
+		rnd := rand.Float64()
+		err := addTheme(ctx, client, themeName, rnd)
+		if err != nil {
+			log.Fatalf("Failed to add theme %s: %v", themeName, err)
+		}
+		fmt.Printf("Added theme: %f: %s\n", rnd, themeName)
 	}
 
 	for _, joke := range jokes {
