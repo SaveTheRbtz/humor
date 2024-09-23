@@ -96,6 +96,10 @@
         "winner": {
           "$ref": "#/definitions/v1Winner",
           "description": "The user's selection."
+        },
+        "known": {
+          "$ref": "#/definitions/v1Winner",
+          "description": "Known jokes."
         }
       },
       "description": "Request to rate the presented jokes."

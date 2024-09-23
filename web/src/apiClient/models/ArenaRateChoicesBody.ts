@@ -32,6 +32,12 @@ export interface ArenaRateChoicesBody {
      * @memberof ArenaRateChoicesBody
      */
     winner?: V1Winner;
+    /**
+     * 
+     * @type {V1Winner}
+     * @memberof ArenaRateChoicesBody
+     */
+    known?: V1Winner;
 }
 
 
@@ -54,6 +60,7 @@ export function ArenaRateChoicesBodyFromJSONTyped(json: any, ignoreDiscriminator
     return {
         
         'winner': json['winner'] == null ? undefined : V1WinnerFromJSON(json['winner']),
+        'known': json['known'] == null ? undefined : V1WinnerFromJSON(json['known']),
     };
 }
 
@@ -64,6 +71,7 @@ export function ArenaRateChoicesBodyToJSON(value?: ArenaRateChoicesBody | null):
     return {
         
         'winner': V1WinnerToJSON(value['winner']),
+        'known': V1WinnerToJSON(value['known']),
     };
 }
 

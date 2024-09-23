@@ -1,5 +1,6 @@
 import React, { useEffect, useState, MouseEvent, MouseEventHandler } from 'react';
 import { ArenaApi, Configuration, V1GetChoicesResponse, V1Winner } from './apiClient';
+import {JokeCard} from './JokeCard';
 import { getErrorMessage } from './errorUtils';
 import './HumorArena.css';
 
@@ -16,40 +17,38 @@ type Choice = {
   known: V1Winner;
 };
 
-type JokeCardProps = {
-  jokeText: string;
-  onVote: MouseEventHandler<HTMLDivElement>;
-};
-const JokeCard: React.FC<JokeCardProps> = ({ jokeText, onVote,  }) => {
-  const [isKnown, setIsKnown] = useState<boolean>(false);
-
-  const handleMarkAsKnown = (event: MouseEvent<HTMLButtonElement>) => {
-    event.stopPropagation();
-    const newIsKnown = !isKnown;
-    setIsKnown(newIsKnown);
-  };
-
-  return (
-    <div
-      className={`joke-card ${isKnown ? 'dimmed' : ''}`}
-      onClick={onVote}
-    >
-      <button
-      className="close-button"
-      onClick={handleMarkAsKnown}
-      title={isKnown ? 'Mark joke as unknown' : 'Mark joke as known'}
-      >
-        ×
-      </button>
-      <p>{jokeText}</p>
-    </div>
-  );
-};
-
 const JokeComparison: React.FC = () => {
   const [choice, setChoice] = useState<Choice | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+
+
+  const handleMarkAsKnown = (selected: V1Winner) => {
+    if (!choice) return;
+
+    let newKnown = choice.known;
+
+    switch (selected) {
+      case V1Winner.Left:
+        if (choice.known === V1Winner.Left || choice.known === V1Winner.Both) {
+          newKnown = choice.known === V1Winner.Both ? V1Winner.Right : V1Winner.None;
+        } else {
+          newKnown = choice.known === V1Winner.Right ? V1Winner.Both : V1Winner.Left;
+        }
+        break;
+      case V1Winner.Right:
+        if (choice.known === V1Winner.Right || choice.known === V1Winner.Both) {
+          newKnown = choice.known === V1Winner.Both ? V1Winner.Left : V1Winner.None;
+        } else {
+          newKnown = choice.known === V1Winner.Left ? V1Winner.Both : V1Winner.Right;
+        }
+        break;
+      default:
+        break;
+    }
+    
+    setChoice({ ...choice, known: newKnown });
+  };
 
   const fetchChoices = async () => {
     setLoading(true);
@@ -82,6 +81,7 @@ const JokeComparison: React.FC = () => {
         id: choice.id,
         body: {
           winner: winner,
+          known: choice.known,
         },
       });
       // Fetch new jokes after voting
@@ -118,11 +118,17 @@ const JokeComparison: React.FC = () => {
       <div className="jokes-container">
         <JokeCard
           jokeText={choice.leftJoke}
-          onVote={() => handleVote(V1Winner.Left)}
+          onVote={handleVote}
+          selected={V1Winner.Left}
+          isKnown={choice.known === V1Winner.Left || choice.known === V1Winner.Both}
+          onMarkAsKnown={handleMarkAsKnown}
         />
         <JokeCard
           jokeText={choice.rightJoke}
-          onVote={() => handleVote(V1Winner.Right)}
+          onVote={handleVote}
+          selected={V1Winner.Right}
+          isKnown={choice.known === V1Winner.Right || choice.known === V1Winner.Both}
+          onMarkAsKnown={handleMarkAsKnown}
         />
       </div>
       <div className="additional-options">

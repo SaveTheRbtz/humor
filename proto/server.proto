@@ -61,6 +61,8 @@ message RateChoicesRequest {
   string id = 1 [(google.api.field_behavior) = REQUIRED];
   // The user's selection.
   Winner winner = 2;
+  // Known jokes.
+  Winner known = 3;
 }
 
 message RateChoicesResponse {

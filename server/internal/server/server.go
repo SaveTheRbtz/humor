@@ -36,6 +36,7 @@ type Choice struct {
 	LeftJokeID  string            `firestore:"left_joke_id"`
 	RightJokeID string            `firestore:"right_joke_id"`
 	Winner      *choicesv1.Winner `firestore:"winner,omitempty"`
+	Known       *choicesv1.Winner `firestore:"known,omitempty"`
 	CreatedAt   time.Time         `firestore:"created_at"`
 	RatedAt     *time.Time        `firestore:"rated_at,omitempty"`
 }
@@ -161,10 +162,13 @@ func (s *Server) RateChoices(ctx context.Context, req *choicesv1.RateChoicesRequ
 	if req.Winner == choicesv1.Winner_UNSPECIFIED {
 		return nil, status.Error(codes.InvalidArgument, "Winner is required")
 	}
+	if req.Known == choicesv1.Winner_UNSPECIFIED {
+		return nil, status.Error(codes.InvalidArgument, "Known is required")
+	}
 
 	_, err := s.firestoreClient.Collection("choices").Doc(req.Id).Update(ctx, []firestore.Update{
 		{
-			Path:  "winner_id",
+			Path:  "winner",
 			Value: req.Winner.String(),
 		},
 		{
