@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, MouseEvent, MouseEventHandler } from 'react';
 import { ArenaApi, Configuration, V1GetChoicesResponse, V1Winner } from './apiClient';
 import { getErrorMessage } from './errorUtils';
 import './HumorArena.css';
@@ -13,6 +13,37 @@ type Choice = {
   theme: string;
   leftJoke: string;
   rightJoke: string;
+  known: V1Winner;
+};
+
+type JokeCardProps = {
+  jokeText: string;
+  onVote: MouseEventHandler<HTMLDivElement>;
+};
+const JokeCard: React.FC<JokeCardProps> = ({ jokeText, onVote,  }) => {
+  const [isKnown, setIsKnown] = useState<boolean>(false);
+
+  const handleMarkAsKnown = (event: MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    const newIsKnown = !isKnown;
+    setIsKnown(newIsKnown);
+  };
+
+  return (
+    <div
+      className={`joke-card ${isKnown ? 'dimmed' : ''}`}
+      onClick={onVote}
+    >
+      <button
+      className="close-button"
+      onClick={handleMarkAsKnown}
+      title={isKnown ? 'Mark joke as unknown' : 'Mark joke as known'}
+      >
+        ×
+      </button>
+      <p>{jokeText}</p>
+    </div>
+  );
 };
 
 const JokeComparison: React.FC = () => {
@@ -33,6 +64,7 @@ const JokeComparison: React.FC = () => {
         theme: response.theme!,
         leftJoke: response.leftJoke!,
         rightJoke: response.rightJoke!,
+        known: V1Winner.None,
       });
     } catch (err: any) {
       const errorMessage = await getErrorMessage(err);
@@ -84,12 +116,14 @@ const JokeComparison: React.FC = () => {
     <div className="joke-comparison">
       <h2>{choice.theme}</h2>
       <div className="jokes-container">
-        <div className="joke-card" onClick={() => handleVote(V1Winner.Left)}>
-          <p>{choice.leftJoke}</p>
-        </div>
-        <div className="joke-card" onClick={() => handleVote(V1Winner.Right)}>
-          <p>{choice.rightJoke}</p>
-        </div>
+        <JokeCard
+          jokeText={choice.leftJoke}
+          onVote={() => handleVote(V1Winner.Left)}
+        />
+        <JokeCard
+          jokeText={choice.rightJoke}
+          onVote={() => handleVote(V1Winner.Right)}
+        />
       </div>
       <div className="additional-options">
         <button className="both-button" onClick={() => handleVote(V1Winner.Both)}>Both are great</button>
