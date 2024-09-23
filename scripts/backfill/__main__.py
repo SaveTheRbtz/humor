@@ -7,11 +7,12 @@ gcloud config set project humor-arena
 """
 
 
-import click
-import random
 import json
-from tqdm import tqdm
+import random
+
+import click
 from google.cloud import firestore
+from tqdm import tqdm
 
 
 @click.command()
