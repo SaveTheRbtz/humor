@@ -175,6 +175,10 @@ func (s *Server) RateChoices(ctx context.Context, req *choicesv1.RateChoicesRequ
 			Value: req.Winner.String(),
 		},
 		{
+			Path:  "known",
+			Value: req.Known.String(),
+		},
+		{
 			Path:  "rated_at",
 			Value: time.Now(),
 		},
