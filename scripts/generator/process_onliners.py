@@ -10,12 +10,12 @@ from dataclasses import asdict
 from typing import Iterable
 
 import aiofiles
-from openai import AsyncOpenAI
-from tqdm.asyncio import tqdm_asyncio
-
 from concurrency import limited_concurrency
 from main import JokeBuilder
 from models import Joke
+from moderation import BatchModeration
+from openai import AsyncOpenAI
+from tqdm.asyncio import tqdm_asyncio
 
 MIN_JOKE_LENGTH = 20
 MAX_JOKE_LENGTH = 256
