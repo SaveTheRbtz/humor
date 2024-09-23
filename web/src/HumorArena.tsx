@@ -92,8 +92,8 @@ const JokeComparison: React.FC = () => {
         </div>
       </div>
       <div className="additional-options">
-        <button onClick={() => handleVote(V1Winner.Both)}>Both are great!</button>
-        <button onClick={() => handleVote(V1Winner.None)}>Neither</button>
+        <button className="both-button" onClick={() => handleVote(V1Winner.Both)}>Both are great</button>
+        <button className="neither-button" onClick={() => handleVote(V1Winner.None)}>Neither are good</button>
       </div>
     </div>
   );

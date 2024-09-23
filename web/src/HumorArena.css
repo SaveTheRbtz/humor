@@ -35,13 +35,24 @@
 .additional-options button {
   margin: 0 10px;
   padding: 10px 20px;
-  background-color: #00b33c;
   color: #fff;
   border: none;
   border-radius: 4px;
   cursor: pointer;
 }
 
-.additional-options button:hover {
+.additional-options .both-button {
+  background-color: #00b33c;
+}
+
+.additional-options .both-button:hover {
   background-color: #009933;
+}
+
+.additional-options .neither-button {
+  background-color: rgb(247, 87, 87);
+}
+
+.additional-options .neither-button:hover {
+  background-color: rgb(132, 28, 28);
 }
