@@ -26,6 +26,8 @@ service Arena {
 
 message GetChoicesRequest {
   // TODO(rbtz): allow passing theme for jokes
+  // A UUID for the user's session.
+  string session_id = 1;
 }
 
 message GetChoicesResponse {

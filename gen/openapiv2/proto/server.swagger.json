@@ -34,6 +34,15 @@
             }
           }
         },
+        "parameters": [
+          {
+            "name": "sessionId",
+            "description": "TODO(rbtz): allow passing theme for jokes\nA UUID for the user's session.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
         "tags": [
           "Arena"
         ]

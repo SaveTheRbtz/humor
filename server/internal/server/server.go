@@ -32,6 +32,7 @@ type Joke struct {
 
 type Choice struct {
 	ThemeID     string            `firestore:"theme_id"`
+	SessionId   string            `firestore:"session_id"`
 	LeftJokeID  string            `firestore:"left_joke_id"`
 	RightJokeID string            `firestore:"right_joke_id"`
 	Winner      *choicesv1.Winner `firestore:"winner,omitempty"`
@@ -111,6 +112,7 @@ func (s *Server) GetChoices(ctx context.Context, req *choicesv1.GetChoicesReques
 	id := uuid.New().String()
 	choice := Choice{
 		ThemeID:     themeDoc.Ref.ID,
+		SessionId:   req.SessionId,
 		LeftJokeID:  leftJokeDoc.Ref.ID,
 		RightJokeID: rightJokeDoc.Ref.ID,
 		CreatedAt:   time.Now(),

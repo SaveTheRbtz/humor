@@ -25,7 +25,9 @@ const JokeComparison: React.FC = () => {
     setError(null);
 
     try {
-      const response: V1GetChoicesResponse = await api.arenaGetChoices();
+      const response: V1GetChoicesResponse = await api.arenaGetChoices(
+        {sessionId: sessionStorage.getItem('userId') || ''},
+      );
       setChoice({
         id: response.id!,
         theme: response.theme!,

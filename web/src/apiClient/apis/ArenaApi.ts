@@ -28,6 +28,10 @@ import {
     V1GetChoicesResponseToJSON,
 } from '../models/index';
 
+export interface ArenaGetChoicesRequest {
+    sessionId?: string;
+}
+
 export interface ArenaRateChoicesRequest {
     id: string;
     body: ArenaRateChoicesBody;
@@ -41,8 +45,12 @@ export class ArenaApi extends runtime.BaseAPI {
     /**
      * Retrieves a pair of jokes for comparison.
      */
-    async arenaGetChoicesRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<V1GetChoicesResponse>> {
+    async arenaGetChoicesRaw(requestParameters: ArenaGetChoicesRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<V1GetChoicesResponse>> {
         const queryParameters: any = {};
+
+        if (requestParameters['sessionId'] != null) {
+            queryParameters['sessionId'] = requestParameters['sessionId'];
+        }
 
         const headerParameters: runtime.HTTPHeaders = {};
 
@@ -59,8 +67,8 @@ export class ArenaApi extends runtime.BaseAPI {
     /**
      * Retrieves a pair of jokes for comparison.
      */
-    async arenaGetChoices(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<V1GetChoicesResponse> {
-        const response = await this.arenaGetChoicesRaw(initOverrides);
+    async arenaGetChoices(requestParameters: ArenaGetChoicesRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<V1GetChoicesResponse> {
+        const response = await this.arenaGetChoicesRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
