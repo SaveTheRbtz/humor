@@ -25,14 +25,14 @@ type Theme struct {
 }
 
 type Joke struct {
-	Theme  string  `firestore:"theme"`
-	Text   string  `firestore:"text"`
-	Random float64 `firestore:"random"`
+	ThemeID string  `firestore:"theme_id"`
+	Text    string  `firestore:"text"`
+	Random  float64 `firestore:"random"`
 }
 
 type Choice struct {
 	ThemeID     string            `firestore:"theme_id"`
-	SessionId   string            `firestore:"session_id"`
+	SessionID   string            `firestore:"session_id"`
 	LeftJokeID  string            `firestore:"left_joke_id"`
 	RightJokeID string            `firestore:"right_joke_id"`
 	Winner      *choicesv1.Winner `firestore:"winner,omitempty"`
@@ -70,11 +70,14 @@ func (s *Server) GetChoices(ctx context.Context, req *choicesv1.GetChoicesReques
 	if themeDoc == nil {
 		return nil, status.Error(codes.NotFound, "No themes found")
 	}
-	theme := themeDoc.Ref.ID
-	s.logger.Debug("GetChoices", zap.String("theme", theme))
+	var theme Theme
+	if err := themeDoc.DataTo(&theme); err != nil {
+		return nil, status.Errorf(codes.Internal, "Failed to decode theme: %v", err)
+	}
+	s.logger.Debug("GetChoices", zap.String("theme_id", themeDoc.Ref.ID), zap.String("theme_text", theme.Text))
 
 	jokesCollection := s.firestoreClient.Collection("jokes")
-	jokesQuery := jokesCollection.Where("theme", "==", theme)
+	jokesQuery := jokesCollection.Where("theme_id", "==", themeDoc.Ref.ID)
 
 	leftJokeDoc, err := s.getRandomDocument(ctx, jokesQuery, s.rand.Float64())
 	if err != nil {
@@ -102,7 +105,7 @@ func (s *Server) GetChoices(ctx context.Context, req *choicesv1.GetChoicesReques
 		}
 	}
 	if rightJokeDoc.Ref.ID == leftJokeDoc.Ref.ID {
-		return nil, status.Error(codes.NotFound, fmt.Sprintf("Too few jokes found for theme: %s", theme))
+		return nil, status.Error(codes.NotFound, fmt.Sprintf("Too few jokes found for theme: %s (%s)", theme.Text, themeDoc.Ref.ID))
 	}
 
 	var rightJoke Joke
@@ -112,7 +115,7 @@ func (s *Server) GetChoices(ctx context.Context, req *choicesv1.GetChoicesReques
 
 	id := uuid.New().String()
 	choice := Choice{
-		SessionId: req.SessionId,
+		SessionID: req.SessionId,
 
 		ThemeID:     themeDoc.Ref.ID,
 		LeftJokeID:  leftJokeDoc.Ref.ID,
@@ -127,7 +130,7 @@ func (s *Server) GetChoices(ctx context.Context, req *choicesv1.GetChoicesReques
 
 	return &choicesv1.GetChoicesResponse{
 		Id:        id,
-		Theme:     theme,
+		Theme:     theme.Text,
 		LeftJoke:  leftJoke.Text,
 		RightJoke: rightJoke.Text,
 	}, nil

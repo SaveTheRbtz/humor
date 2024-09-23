@@ -52,42 +52,45 @@ func main() {
 		themes[joke.Theme] = struct{}{}
 	}
 
+	themeToID := make(map[string]string)
 	for themeName := range themes {
 		rnd := rand.Float64()
-		err := addTheme(ctx, client, themeName, rnd)
+		ref_id, err := addTheme(ctx, client, themeName, rnd)
 		if err != nil {
 			log.Fatalf("Failed to add theme %s: %v", themeName, err)
 		}
+		themeToID[themeName] = ref_id
 		fmt.Printf("Added theme: %f: %s\n", rnd, themeName)
 	}
 
 	for _, joke := range jokes {
 		rnd := rand.Float64()
-		err := addJoke(ctx, client, joke.Theme, joke.Text, rnd)
+		err := addJoke(ctx, client, themeToID[joke.Theme], joke.Text, rnd)
 		if err != nil {
 			log.Fatalf("Failed to add joke: %v", err)
 		}
-		fmt.Printf("Added joke to theme %f: %s: %s\n", rnd, joke.Theme, joke.Text)
+		fmt.Printf("Added joke to theme %f: %s (%s): %s\n",
+			rnd, joke.Theme, themeToID[joke.Theme], joke.Text)
 	}
 
 	fmt.Println("Data population completed.")
 }
 
-func addTheme(ctx context.Context, client *firestore.Client, themeName string, rnd float64) error {
+func addTheme(ctx context.Context, client *firestore.Client, themeName string, rnd float64) (string, error) {
 	theme := serverImpl.Theme{
 		Text:   themeName,
 		Random: rnd,
 	}
-	_, err := client.Collection("themes").Doc(themeName).Set(ctx, theme)
-	return err
+	docRef, _, err := client.Collection("themes").Add(ctx, theme)
+	return docRef.ID, err
 }
 
 func addJoke(ctx context.Context, client *firestore.Client, theme string, text string, rnd float64) error {
 
 	joke := serverImpl.Joke{
-		Theme:  theme,
-		Text:   text,
-		Random: rnd,
+		ThemeID: theme,
+		Text:    text,
+		Random:  rnd,
 	}
 	_, _, err := client.Collection("jokes").Add(ctx, joke)
 	return err
