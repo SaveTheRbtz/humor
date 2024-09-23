@@ -9,7 +9,7 @@ COPY gen ./gen
 RUN go mod download
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /server ./server/cmd/server/main.go
 
-FROM node:18 AS web-builder
+FROM node:22.9.0-slim AS web-builder
 
 WORKDIR /code
 
@@ -18,7 +18,7 @@ COPY web/ .
 RUN npm install
 RUN npm run build
 
-FROM alpine:latest AS app
+FROM gcr.io/distroless/static-debian12:latest AS app
 
 WORKDIR /app
 
