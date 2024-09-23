@@ -84,7 +84,7 @@ func (s *Server) GetChoices(ctx context.Context, req *choicesv1.GetChoicesReques
 		return nil, status.Errorf(codes.Internal, "Failed to get first random joke: %v", err)
 	}
 	if leftJokeDoc == nil {
-		return nil, status.Error(codes.NotFound, "No jokes found")
+		return nil, status.Errorf(codes.NotFound, "No jokes found for theme %s (%s)", theme.Text, themeDoc.Ref.ID)
 	}
 	var leftJoke Joke
 	if err := leftJokeDoc.DataTo(&leftJoke); err != nil {
@@ -98,7 +98,7 @@ func (s *Server) GetChoices(ctx context.Context, req *choicesv1.GetChoicesReques
 			return nil, status.Errorf(codes.Internal, "Failed to get second random joke: %v", err)
 		}
 		if rightJokeDoc == nil {
-			return nil, status.Error(codes.NotFound, "No jokes found")
+			return nil, status.Errorf(codes.NotFound, "No jokes found for theme %s (%s)", theme.Text, themeDoc.Ref.ID)
 		}
 		if rightJokeDoc.Ref.ID != leftJokeDoc.Ref.ID {
 			break
