@@ -1,0 +1,7 @@
+data/*
+input/*
+output/*
+node_modules
+__pycache__
+.DS_Store
+.python-version
