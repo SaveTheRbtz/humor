@@ -87,7 +87,7 @@ func (s *Server) GetChoices(ctx context.Context, req *choicesv1.GetChoicesReques
 	}
 
 	var rightJokeDoc *firestore.DocumentSnapshot
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 3; i++ {
 		rightJokeDoc, err = s.getRandomDocument(ctx, jokesQuery, s.rand.Float64())
 		if err != nil {
 			return nil, status.Errorf(codes.Internal, "Failed to get second random joke: %v", err)

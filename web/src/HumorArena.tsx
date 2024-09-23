@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ArenaApi, Configuration, V1GetChoicesResponse, V1Winner } from './apiClient';
+import { getErrorMessage } from './errorUtils';
+import './HumorArena.css';
 
 const apiBasePath = process.env.REACT_APP_API_BASE_URL || '';
 
@@ -30,8 +32,9 @@ const JokeComparison: React.FC = () => {
         leftJoke: response.leftJoke!,
         rightJoke: response.rightJoke!,
       });
-    } catch (err) {
-      setError('Failed to fetch jokes.');
+    } catch (err: any) {
+      const errorMessage = await getErrorMessage(err);
+      setError(`Failed to fetch jokes: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
@@ -56,7 +59,6 @@ const JokeComparison: React.FC = () => {
 
   useEffect(() => {
     fetchChoices();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (loading) {
@@ -77,19 +79,17 @@ const JokeComparison: React.FC = () => {
   }
 
   return (
-    <div>
-      <h2>Theme: {choice.theme}</h2>
-      <div style={{ display: 'flex', justifyContent: 'space-around' }}>
-        <div style={{ width: '40%' }}>
+    <div className="joke-comparison">
+      <h2>{choice.theme}</h2>
+      <div className="jokes-container">
+        <div className="joke-card" onClick={() => handleVote(V1Winner.Left)}>
           <p>{choice.leftJoke}</p>
-          <button onClick={() => handleVote(V1Winner.Left)}>Vote Left</button>
         </div>
-        <div style={{ width: '40%' }}>
+        <div className="joke-card" onClick={() => handleVote(V1Winner.Right)}>
           <p>{choice.rightJoke}</p>
-          <button onClick={() => handleVote(V1Winner.Right)}>Vote Right</button>
         </div>
       </div>
-      <div style={{ marginTop: '20px' }}>
+      <div className="additional-options">
         <button onClick={() => handleVote(V1Winner.Both)}>Both are great!</button>
         <button onClick={() => handleVote(V1Winner.None)}>Neither</button>
       </div>

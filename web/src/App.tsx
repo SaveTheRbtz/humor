@@ -1,11 +1,13 @@
-import React from 'react';
+import Header from './Header';
 import JokeComparison from './HumorArena';
 
 function App() {
   return (
     <div className="App">
-      <h1>Joke Arena</h1>
-      <JokeComparison />
+      <Header />
+      <main>
+        <JokeComparison />
+      </main>
     </div>
   );
 }
