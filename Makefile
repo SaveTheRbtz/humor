@@ -1,4 +1,4 @@
-.PHONY: check-deps buf-gen gen-api-client generate
+.PHONY: check-deps buf-gen gen-api-client generate build deploy
 
 check-deps:
 	@echo "Checking dependencies..."
@@ -19,3 +19,18 @@ gen-api-client: check-deps
 
 generate: buf-gen gen-api-client
 	@echo "Code generation completed successfully."
+
+build:
+	@echo "Building Docker image..."
+	docker build --platform linux/amd64 -t gcr.io/humor-arena/server:latest --target app .
+
+deploy: build
+	@echo "Pushing Docker image to Google Container Registry..."
+	docker push gcr.io/humor-arena/server:latest
+	@echo "Deploying to Google Cloud Run..."
+	gcloud run deploy humor-arena \
+		--image gcr.io/humor-arena/server:latest \
+		--platform managed \
+		--region us-central1 \
+		--allow-unauthenticated \
+		--service-account cloud-run-firestore-sa@humor-arena.iam.gserviceaccount.com
