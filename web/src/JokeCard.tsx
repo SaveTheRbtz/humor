@@ -9,23 +9,10 @@ type JokeCardProps = {
 };
 
 const JokeCard: React.FC<JokeCardProps> = ({ jokeText, onVote, selected, isKnown, onMarkAsKnown }) => {
-    const handleMarkAsKnown = (event: MouseEvent<HTMLButtonElement>) => {
-        event.stopPropagation();
-        onMarkAsKnown(selected);
-    };
-
     return (
         <div
             className={`joke-card ${isKnown ? 'dimmed' : ''}`}
-            onClick={() => onVote(selected)}
         >
-            <button
-                className="close-button"
-                onClick={handleMarkAsKnown}
-                title={isKnown ? 'Mark joke as unknown' : 'Mark joke as known'}
-            >
-                ×
-            </button>
             <p>{jokeText}</p>
         </div>
     );

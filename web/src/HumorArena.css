@@ -9,24 +9,19 @@
   gap: 20px;
   margin-top: 20px;
 }
+
 .joke-card {
   position: relative;
   background-color: #f9f9f9;
   padding: 20px;
   width: 40%;
   border-radius: 8px;
-  cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
 }
 
 .joke-card.dimmed {
   opacity: 0.5;
   transition: opacity 0.5s ease-in-out;
-}
-
-.joke-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .joke-card p {
@@ -61,6 +56,14 @@
   cursor: pointer;
 }
 
+.additional-options .button {
+  background-color: #5695fc;
+}
+
+.additional-options .button:hover {
+  background-color: #337ffb;
+}
+
 .additional-options .both-button {
   background-color: #00b33c;
 }
@@ -70,9 +73,9 @@
 }
 
 .additional-options .neither-button {
-  background-color: rgb(247, 87, 87);
+  background-color: #ff5c5c;
 }
 
 .additional-options .neither-button:hover {
-  background-color: rgb(132, 28, 28);
+  background-color: #f93838;
 }
