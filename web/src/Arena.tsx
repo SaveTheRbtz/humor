@@ -2,7 +2,7 @@ import React, { useEffect, useState, MouseEvent, MouseEventHandler } from 'react
 import { ArenaApi, Configuration, V1GetChoicesResponse, V1Winner } from './apiClient';
 import {JokeCard} from './JokeCard';
 import { getErrorMessage } from './errorUtils';
-import './HumorArena.css';
+import './Arena.css';
 
 const apiBasePath = process.env.REACT_APP_API_BASE_URL || '';
 
@@ -17,7 +17,7 @@ type Choice = {
   known: V1Winner;
 };
 
-const JokeComparison: React.FC = () => {
+const Arena: React.FC = () => {
   const [choice, setChoice] = useState<Choice | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -141,4 +141,4 @@ const JokeComparison: React.FC = () => {
   );
 };
 
-export default JokeComparison;
+export default Arena;

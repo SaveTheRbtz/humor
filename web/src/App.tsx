@@ -1,7 +1,11 @@
-import Header from './Header';
-import { useEffect } from 'react';
+
+import React, { useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import JokeComparison from './HumorArena';
+import Header from './Header';
+import { Routes, Route } from 'react-router-dom';
+import About from './About';
+import Leaderboard from './Leaderboard';
+import Arena from './Arena';
 
 function App() {
   useEffect(() => {
@@ -11,11 +15,17 @@ function App() {
       sessionStorage.setItem('userId', userId);
     }
   }, []);
+
   return (
     <div className="App">
       <Header />
       <main>
-        <JokeComparison />
+        <Routes>
+          <Route path="/" element={<About />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/arena" element={<Arena />} />
+          <Route path="/leaderboard" element={<Leaderboard />} />
+        </Routes>
       </main>
     </div>
   );
