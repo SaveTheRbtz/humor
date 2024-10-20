@@ -19,8 +19,9 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Arena_GetChoices_FullMethodName  = "/choices.v1.Arena/GetChoices"
-	Arena_RateChoices_FullMethodName = "/choices.v1.Arena/RateChoices"
+	Arena_GetChoices_FullMethodName     = "/choices.v1.Arena/GetChoices"
+	Arena_RateChoices_FullMethodName    = "/choices.v1.Arena/RateChoices"
+	Arena_GetLeaderboard_FullMethodName = "/choices.v1.Arena/GetLeaderboard"
 )
 
 // ArenaClient is the client API for Arena service.
@@ -33,6 +34,8 @@ type ArenaClient interface {
 	GetChoices(ctx context.Context, in *GetChoicesRequest, opts ...grpc.CallOption) (*GetChoicesResponse, error)
 	// Submits the user's choice between two jokes.
 	RateChoices(ctx context.Context, in *RateChoicesRequest, opts ...grpc.CallOption) (*RateChoicesResponse, error)
+	// Gets the leaderboard of joke models.
+	GetLeaderboard(ctx context.Context, in *GetLeaderboardRequest, opts ...grpc.CallOption) (*GetLeaderboardResponse, error)
 }
 
 type arenaClient struct {
@@ -63,6 +66,16 @@ func (c *arenaClient) RateChoices(ctx context.Context, in *RateChoicesRequest, o
 	return out, nil
 }
 
+func (c *arenaClient) GetLeaderboard(ctx context.Context, in *GetLeaderboardRequest, opts ...grpc.CallOption) (*GetLeaderboardResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetLeaderboardResponse)
+	err := c.cc.Invoke(ctx, Arena_GetLeaderboard_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ArenaServer is the server API for Arena service.
 // All implementations must embed UnimplementedArenaServer
 // for forward compatibility.
@@ -73,6 +86,8 @@ type ArenaServer interface {
 	GetChoices(context.Context, *GetChoicesRequest) (*GetChoicesResponse, error)
 	// Submits the user's choice between two jokes.
 	RateChoices(context.Context, *RateChoicesRequest) (*RateChoicesResponse, error)
+	// Gets the leaderboard of joke models.
+	GetLeaderboard(context.Context, *GetLeaderboardRequest) (*GetLeaderboardResponse, error)
 	mustEmbedUnimplementedArenaServer()
 }
 
@@ -88,6 +103,9 @@ func (UnimplementedArenaServer) GetChoices(context.Context, *GetChoicesRequest) 
 }
 func (UnimplementedArenaServer) RateChoices(context.Context, *RateChoicesRequest) (*RateChoicesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RateChoices not implemented")
+}
+func (UnimplementedArenaServer) GetLeaderboard(context.Context, *GetLeaderboardRequest) (*GetLeaderboardResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetLeaderboard not implemented")
 }
 func (UnimplementedArenaServer) mustEmbedUnimplementedArenaServer() {}
 func (UnimplementedArenaServer) testEmbeddedByValue()               {}
@@ -146,6 +164,24 @@ func _Arena_RateChoices_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Arena_GetLeaderboard_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetLeaderboardRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ArenaServer).GetLeaderboard(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Arena_GetLeaderboard_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ArenaServer).GetLeaderboard(ctx, req.(*GetLeaderboardRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Arena_ServiceDesc is the grpc.ServiceDesc for Arena service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -160,6 +196,10 @@ var Arena_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RateChoices",
 			Handler:    _Arena_RateChoices_Handler,
+		},
+		{
+			MethodName: "GetLeaderboard",
+			Handler:    _Arena_GetLeaderboard_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

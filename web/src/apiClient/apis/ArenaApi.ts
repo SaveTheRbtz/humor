@@ -18,6 +18,7 @@ import type {
   ArenaRateChoicesBody,
   RpcStatus,
   V1GetChoicesResponse,
+  V1GetLeaderboardResponse,
 } from '../models/index';
 import {
     ArenaRateChoicesBodyFromJSON,
@@ -26,6 +27,8 @@ import {
     RpcStatusToJSON,
     V1GetChoicesResponseFromJSON,
     V1GetChoicesResponseToJSON,
+    V1GetLeaderboardResponseFromJSON,
+    V1GetLeaderboardResponseToJSON,
 } from '../models/index';
 
 export interface ArenaGetChoicesRequest {
@@ -69,6 +72,32 @@ export class ArenaApi extends runtime.BaseAPI {
      */
     async arenaGetChoices(requestParameters: ArenaGetChoicesRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<V1GetChoicesResponse> {
         const response = await this.arenaGetChoicesRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Gets the leaderboard of joke models.
+     */
+    async arenaGetLeaderboardRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<V1GetLeaderboardResponse>> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        const response = await this.request({
+            path: `/v1/leaderboard`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => V1GetLeaderboardResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Gets the leaderboard of joke models.
+     */
+    async arenaGetLeaderboard(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<V1GetLeaderboardResponse> {
+        const response = await this.arenaGetLeaderboardRaw(initOverrides);
         return await response.value();
     }
 

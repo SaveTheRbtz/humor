@@ -22,6 +22,12 @@ service Arena {
       body : "*"
     };
   }
+  // Gets the leaderboard of joke models.
+  rpc GetLeaderboard(GetLeaderboardRequest) returns (GetLeaderboardResponse) {
+    option (google.api.http) = {
+      get : "/v1/leaderboard"
+    };
+  }
 }
 
 message GetChoicesRequest {
@@ -58,7 +64,7 @@ enum Winner {
 // Request to rate the presented jokes.
 message RateChoicesRequest {
   // Identifier of the joke pair being rated.
-  string id = 1 [(google.api.field_behavior) = REQUIRED];
+  string id = 1 [ (google.api.field_behavior) = REQUIRED ];
   // The user's selection.
   Winner winner = 2;
   // Known jokes.
@@ -68,3 +74,19 @@ message RateChoicesRequest {
 message RateChoicesResponse {
   // TODO(rbtz): return jokes generation parameters: model, policy, etc.
 }
+
+// Request to get the Arena leaderboard.
+message GetLeaderboardRequest {
+  // TODO(rbtz): allow filtering
+}
+
+// LeaderboardEntry contains the model name and its Bradley-Terry rating.
+message LeaderboardEntry {
+  // Public model name.
+  string model = 1;
+  // Bradley-Terry rating of the model.
+  double bradleyterr_score = 2;
+}
+
+// GetLeaderboardResponse contains the leaderboard of joke models.
+message GetLeaderboardResponse { repeated LeaderboardEntry entries = 1; }

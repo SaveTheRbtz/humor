@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"fmt"
+	"sort"
 
 	"go.uber.org/zap"
 
@@ -14,6 +15,9 @@ import (
 	"time"
 
 	choicesv1 "github.com/SaveTheRbtz/humor/gen/go/proto"
+
+	"github.com/seanhagen/bradleyterry"
+	"google.golang.org/api/iterator"
 
 	"github.com/google/uuid"
 )
@@ -27,6 +31,8 @@ type Joke struct {
 	ThemeID string  `firestore:"theme_id"`
 	Text    string  `firestore:"text"`
 	Random  float64 `firestore:"random"`
+	Model   string  `firestore:"model"`
+	Policy  string  `firestore:"policy"`
 }
 
 type Choice struct {
@@ -130,11 +136,11 @@ func (s *Server) RateChoices(ctx context.Context, req *choicesv1.RateChoicesRequ
 	_, err := s.firestoreClient.Collection("choices").Doc(req.Id).Update(ctx, []firestore.Update{
 		{
 			Path:  "winner",
-			Value: req.Winner.String(),
+			Value: req.Winner.Number(),
 		},
 		{
 			Path:  "known",
-			Value: req.Known.String(),
+			Value: req.Known.Number(),
 		},
 		{
 			Path:  "rated_at",
@@ -146,4 +152,86 @@ func (s *Server) RateChoices(ctx context.Context, req *choicesv1.RateChoicesRequ
 	}
 
 	return &choicesv1.RateChoicesResponse{}, nil
+}
+
+// OMG extremely slow aka accidentally quadratic
+func (s *Server) GetLeaderboard(
+	ctx context.Context,
+	req *choicesv1.GetLeaderboardRequest,
+) (*choicesv1.GetLeaderboardResponse, error) {
+	allChoicesDocs := s.firestoreClient.Collection("choices").Query.Documents(ctx)
+	allPairs := []bradleyterry.Pair{}
+	for {
+		doc, err := allChoicesDocs.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, fmt.Errorf("failed to get all choices: %w", err)
+		}
+
+		var choice Choice
+		if err := doc.DataTo(&choice); err != nil {
+			return nil, fmt.Errorf("failed to convert choice to struct: %w", err)
+		}
+		if choice.Winner == nil {
+			continue
+		}
+		if *choice.Winner != choicesv1.Winner_LEFT && *choice.Winner != choicesv1.Winner_RIGHT {
+			continue
+		}
+
+		leftDoc, err := s.firestoreClient.Collection("jokes").Doc(choice.LeftJokeID).Get(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get left joke: %w", err)
+		}
+		leftJoke := Joke{}
+		if err := leftDoc.DataTo(&leftJoke); err != nil {
+			return nil, fmt.Errorf("failed to convert left joke to struct: %w", err)
+		}
+
+		rightDoc, err := s.firestoreClient.Collection("jokes").Doc(choice.RightJokeID).Get(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get right joke: %w", err)
+		}
+		rightJoke := Joke{}
+		if err := rightDoc.DataTo(&rightJoke); err != nil {
+			return nil, fmt.Errorf("failed to convert right joke to struct: %w", err)
+		}
+
+		var winnerModel, loserModel string
+		switch *choice.Winner {
+		case choicesv1.Winner_LEFT:
+			winnerModel = leftJoke.Model
+			loserModel = rightJoke.Model
+		case choicesv1.Winner_RIGHT:
+			winnerModel = rightJoke.Model
+			loserModel = leftJoke.Model
+		default:
+			continue
+		}
+
+		allPairs = append(allPairs, bradleyterry.Pair{
+			Winner: winnerModel,
+			Loser:  loserModel,
+		})
+	}
+	s.logger.Debug("GetLeaderboard", zap.Int("allPairs", len(allPairs)))
+
+	// map[string]float64 - jokeID -> score
+	bt := bradleyterry.Model(allPairs)
+	leaderboard := []*choicesv1.LeaderboardEntry{}
+	for model, score := range bt {
+		leaderboard = append(leaderboard, &choicesv1.LeaderboardEntry{
+			Model:            model,
+			BradleyterrScore: score,
+		})
+	}
+	sort.Slice(leaderboard, func(i, j int) bool {
+		return leaderboard[i].BradleyterrScore > leaderboard[j].BradleyterrScore
+	})
+
+	return &choicesv1.GetLeaderboardResponse{
+		Entries: leaderboard,
+	}, nil
 }
