@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Routes, Route } from 'react-router-dom';
 import Header from './Header';
+import Footer from './Footer';
 import About from './About';
 import Leaderboard from './Leaderboard';
 import Arena from './Arena';
@@ -27,6 +28,7 @@ function App() {
           <Route path="/leaderboard" element={<Leaderboard />} />
         </Routes>
       </main>
+      <Footer />
     </div>
   );
 }

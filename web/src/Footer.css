@@ -1,0 +1,19 @@
+.footer {
+    text-align: center;
+    padding: 1em;
+    background-color: #f1f1f1;
+    position: fixed;
+    width: 100%;
+    bottom: 0;
+  }
+  
+  .footer-link {
+    color: #1DA1F2;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+  }
+  
+  .footer-link:hover {
+    text-decoration: underline;
+  }
