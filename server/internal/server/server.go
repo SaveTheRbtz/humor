@@ -10,7 +10,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	secureRand "crypto/rand"
 	insecureRand "math/rand/v2"
 	"time"
 
@@ -47,71 +46,52 @@ type Server struct {
 	logger          *zap.Logger
 	firestoreClient *firestore.Client
 	rand            *insecureRand.Rand
+	themeGetter     *randomDocumentGetterImpl[Theme]
 }
 
 func NewServer(firestoreClient *firestore.Client, logger *zap.Logger) (*Server, error) {
-	var seedBytes [32]byte
-	if _, err := secureRand.Read(seedBytes[:]); err != nil {
-		return nil, fmt.Errorf("failed to seed random generator: %w", err)
+	randomThemeGetter, err := NewRandomDocumentGetter[Theme](
+		firestoreClient,
+		firestoreClient.Collection("themes").Query,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create random theme getter: %w", err)
 	}
+
 	return &Server{
 		logger:          logger,
 		firestoreClient: firestoreClient,
-		rand:            insecureRand.New(insecureRand.NewChaCha8(seedBytes)),
+		themeGetter:     randomThemeGetter,
 	}, nil
 }
 
-func (s *Server) GetChoices(ctx context.Context, req *choicesv1.GetChoicesRequest) (*choicesv1.GetChoicesResponse, error) {
-	themeQuery := s.firestoreClient.Collection("themes").Query
-	themeDoc, err := s.getRandomDocument(ctx, themeQuery, s.rand.Float64())
+func (s *Server) GetChoices(
+	ctx context.Context,
+	req *choicesv1.GetChoicesRequest,
+) (*choicesv1.GetChoicesResponse, error) {
+	themes, themeDocs, err := s.themeGetter.GetRandomDocuments(ctx, 1)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to get random theme: %v", err)
 	}
-	if themeDoc == nil {
-		return nil, status.Error(codes.NotFound, "No themes found")
-	}
-	var theme Theme
-	if err := themeDoc.DataTo(&theme); err != nil {
-		return nil, status.Errorf(codes.Internal, "Failed to decode theme: %v", err)
-	}
+	theme, themeDoc := themes[0], themeDocs[0]
 	s.logger.Debug("GetChoices", zap.String("theme_id", themeDoc.Ref.ID), zap.String("theme_text", theme.Text))
 
-	jokesCollection := s.firestoreClient.Collection("jokes")
-	jokesQuery := jokesCollection.Where("theme_id", "==", themeDoc.Ref.ID)
-
-	leftJokeDoc, err := s.getRandomDocument(ctx, jokesQuery, s.rand.Float64())
+	jokeGetter, err := NewRandomDocumentGetter[Joke](
+		s.firestoreClient,
+		s.firestoreClient.Collection("jokes").Query.Where("theme_id", "==", themeDoc.Ref.ID),
+	)
+	jokes, jokeDocs, err := jokeGetter.GetRandomDocuments(ctx, 2)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Failed to get first random joke: %v", err)
+		return nil, status.Errorf(codes.Internal, "Failed to get random jokes: %v", err)
 	}
-	if leftJokeDoc == nil {
-		return nil, status.Errorf(codes.NotFound, "No jokes found for theme %s (%s)", theme.Text, themeDoc.Ref.ID)
-	}
-	var leftJoke Joke
-	if err := leftJokeDoc.DataTo(&leftJoke); err != nil {
-		return nil, status.Errorf(codes.Internal, "Failed to decode joke: %v", err)
-	}
-
-	var rightJokeDoc *firestore.DocumentSnapshot
-	for i := 0; i < 3; i++ {
-		rightJokeDoc, err = s.getRandomDocument(ctx, jokesQuery, s.rand.Float64())
-		if err != nil {
-			return nil, status.Errorf(codes.Internal, "Failed to get second random joke: %v", err)
-		}
-		if rightJokeDoc == nil {
-			return nil, status.Errorf(codes.NotFound, "No jokes found for theme %s (%s)", theme.Text, themeDoc.Ref.ID)
-		}
-		if rightJokeDoc.Ref.ID != leftJokeDoc.Ref.ID {
-			break
-		}
-	}
-	if rightJokeDoc.Ref.ID == leftJokeDoc.Ref.ID {
-		return nil, status.Error(codes.NotFound, fmt.Sprintf("Too few jokes found for theme: %s (%s)", theme.Text, themeDoc.Ref.ID))
-	}
-
-	var rightJoke Joke
-	if err := rightJokeDoc.DataTo(&rightJoke); err != nil {
-		return nil, status.Errorf(codes.Internal, "Failed to decode joke: %v", err)
-	}
+	leftJoke, leftJokeDoc := jokes[0], jokeDocs[0]
+	rightJoke, rightJokeDoc := jokes[1], jokeDocs[1]
+	s.logger.Debug("GetChoices",
+		zap.String("left_joke_id", leftJokeDoc.Ref.ID),
+		zap.String("left_joke_text", leftJoke.Text),
+		zap.String("right_joke_id", rightJokeDoc.Ref.ID),
+		zap.String("right_joke_text", rightJoke.Text),
+	)
 
 	id := uuid.New().String()
 	choice := Choice{
@@ -134,28 +114,6 @@ func (s *Server) GetChoices(ctx context.Context, req *choicesv1.GetChoicesReques
 		LeftJoke:  leftJoke.Text,
 		RightJoke: rightJoke.Text,
 	}, nil
-}
-
-func (s *Server) getRandomDocument(ctx context.Context, baseQuery firestore.Query, r float64) (*firestore.DocumentSnapshot, error) {
-	query := baseQuery.Where("random", ">=", r).OrderBy("random", firestore.Asc).Limit(1)
-	docs, err := query.Documents(ctx).GetAll()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get documents: %w", err)
-	}
-	if len(docs) > 0 {
-		return docs[0], nil
-	}
-
-	query = baseQuery.Where("random", "<", r).OrderBy("random", firestore.Asc).Limit(1)
-	docs, err = query.Documents(ctx).GetAll()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get wraped random documents: %w", err)
-	}
-	if len(docs) > 0 {
-		return docs[0], nil
-	}
-
-	return nil, nil
 }
 
 func (s *Server) RateChoices(ctx context.Context, req *choicesv1.RateChoicesRequest) (*choicesv1.RateChoicesResponse, error) {
