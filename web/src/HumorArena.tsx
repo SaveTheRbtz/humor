@@ -114,7 +114,7 @@ const JokeComparison: React.FC = () => {
 
   return (
     <div className="joke-comparison">
-      <h2>{choice.theme}</h2>
+      <h2>Topic: {choice.theme}</h2>
       <div className="jokes-container">
         <JokeCard
           jokeText={choice.leftJoke}

@@ -7,8 +7,9 @@ const Header: React.FC = () => {
       <h1>Humor Arena</h1>
       <nav>
         <ul className="menu">
-          <li><a href="/">Joke Comparison</a></li>
-          {/* <li><a href="/leaderboard">Leaderboard</a></li> */}
+          <li><a href="/arena">Arena (side-by-side)</a></li>
+          <li><a href="/leaderboard">Leaderboard</a></li>
+          <li><a href="/">About</a></li>
         </ul>
       </nav>
     </header>
