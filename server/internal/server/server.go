@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"sort"
 
+	"sync/atomic"
+
 	"go.uber.org/zap"
 
 	"cloud.google.com/go/firestore"
@@ -21,6 +23,12 @@ import (
 
 	"github.com/google/uuid"
 )
+
+// TODO(rbtz): move to a cronjob.
+type LeaderboardCache struct {
+	Data      *choicesv1.GetLeaderboardResponse
+	Timestamp time.Time
+}
 
 type Theme struct {
 	Text   string  `firestore:"text"`
@@ -49,10 +57,11 @@ type Choice struct {
 type Server struct {
 	choicesv1.UnimplementedArenaServer
 
-	logger          *zap.Logger
-	firestoreClient *firestore.Client
-	rand            *insecureRand.Rand
-	themeGetter     *randomDocumentGetterImpl[Theme]
+	logger           *zap.Logger
+	firestoreClient  *firestore.Client
+	rand             *insecureRand.Rand
+	themeGetter      *randomDocumentGetterImpl[Theme]
+	leaderboardCache atomic.Pointer[LeaderboardCache]
 }
 
 func NewServer(firestoreClient *firestore.Client, logger *zap.Logger) (*Server, error) {
@@ -158,7 +167,13 @@ func (s *Server) GetLeaderboard(
 	ctx context.Context,
 	req *choicesv1.GetLeaderboardRequest,
 ) (*choicesv1.GetLeaderboardResponse, error) {
-	// Step 1: Fetch all choices and collect joke IDs
+	cached := s.leaderboardCache.Load()
+	if cached != nil && time.Since(cached.Timestamp) < 5*time.Minute {
+		// Return the cached data
+		s.logger.Debug("Returning cached leaderboard")
+		return cached.Data, nil
+	}
+
 	allChoicesDocs := s.firestoreClient.Collection("choices").Documents(ctx)
 	choices := []Choice{}
 	jokeIDs := make(map[string]struct{})
@@ -190,7 +205,6 @@ func (s *Server) GetLeaderboard(
 		choices = append(choices, choice)
 	}
 
-	// Step 2: Fetch all jokes in a single batch
 	jokeDocRefs := make([]*firestore.DocumentRef, 0, len(jokeIDs))
 	for jokeID := range jokeIDs {
 		docRef := s.firestoreClient.Collection("jokes").Doc(jokeID)
@@ -254,7 +268,15 @@ func (s *Server) GetLeaderboard(
 		return leaderboard[i].BradleyterrScore > leaderboard[j].BradleyterrScore
 	})
 
-	return &choicesv1.GetLeaderboardResponse{
+	response := &choicesv1.GetLeaderboardResponse{
 		Entries: leaderboard,
-	}, nil
+	}
+
+	newCache := &LeaderboardCache{
+		Data:      response,
+		Timestamp: time.Now(),
+	}
+	s.leaderboardCache.Store(newCache)
+
+	return response, nil
 }
