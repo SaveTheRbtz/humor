@@ -90,15 +90,9 @@ const Arena: React.FC = () => {
       <div className="jokes-container">
         <JokeCard
           jokeText={choice.leftJoke}
-          onVote={handleVote}
-          selected={V1Winner.Left}
-          isKnown={choice.known === V1Winner.Left || choice.known === V1Winner.Both}
         />
         <JokeCard
           jokeText={choice.rightJoke}
-          onVote={handleVote}
-          selected={V1Winner.Right}
-          isKnown={choice.known === V1Winner.Right || choice.known === V1Winner.Both}
         />
       </div>
       <div className="additional-options">

@@ -10,24 +10,6 @@
   margin-top: 20px;
 }
 
-.joke-card {
-  position: relative;
-  background-color: #f9f9f9;
-  padding: 20px;
-  width: 40%;
-  border-radius: 8px;
-  transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
-}
-
-.joke-card.dimmed {
-  opacity: 0.5;
-  transition: opacity 0.5s ease-in-out;
-}
-
-.joke-card p {
-  font-size: 1.1em;
-}
-
 .close-button {
   position: absolute;
   top: 5px;
