@@ -5,6 +5,8 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"os"
+	"path/filepath"
 
 	"cloud.google.com/go/firestore"
 	choicesv1 "github.com/SaveTheRbtz/humor/gen/go/proto"
@@ -30,6 +32,21 @@ func allowCORS(h http.Handler) http.Handler {
 		}
 		h.ServeHTTP(w, r)
 	})
+}
+
+func spaHandler(staticPath string, indexPath string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		path := filepath.Join(staticPath, r.URL.Path)
+		_, err := os.Stat(path)
+		if os.IsNotExist(err) {
+			http.ServeFile(w, r, filepath.Join(staticPath, indexPath))
+			return
+		} else if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		http.FileServer(http.Dir(staticPath)).ServeHTTP(w, r)
+	}
 }
 
 func main() {
@@ -83,7 +100,7 @@ func main() {
 
 	mainMux := http.NewServeMux()
 	mainMux.Handle("/v1/", allowCORS(grpcMux))
-	mainMux.Handle("/", http.FileServer(http.Dir("./static")))
+	mainMux.HandleFunc("/", spaHandler("./static", "index.html"))
 
 	if err := http.ListenAndServe(":8080", mainMux); err != nil {
 		logger.Fatal("Failed to serve HTTP", zap.Error(err))
