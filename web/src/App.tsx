@@ -1,8 +1,8 @@
 
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import Header from './Header';
 import { Routes, Route } from 'react-router-dom';
+import Header from './Header';
 import About from './About';
 import Leaderboard from './Leaderboard';
 import Arena from './Arena';

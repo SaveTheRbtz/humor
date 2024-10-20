@@ -5,10 +5,9 @@ type JokeCardProps = {
     onVote: (winner: V1Winner) => void;
     selected: V1Winner;
     isKnown: boolean;
-    onMarkAsKnown: (selected: V1Winner) => void;
 };
 
-const JokeCard: React.FC<JokeCardProps> = ({ jokeText, onVote, selected, isKnown, onMarkAsKnown }) => {
+const JokeCard: React.FC<JokeCardProps> = ({ jokeText, onVote, selected, isKnown}) => {
     return (
         <div
             className={`joke-card ${isKnown ? 'dimmed' : ''}`}
