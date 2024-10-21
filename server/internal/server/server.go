@@ -260,12 +260,12 @@ func (s *Server) GetLeaderboard(
 	leaderboard := []*choicesv1.LeaderboardEntry{}
 	for model, score := range bt {
 		leaderboard = append(leaderboard, &choicesv1.LeaderboardEntry{
-			Model:            model,
-			BradleyterrScore: score,
+			Model: model,
+			Score: score,
 		})
 	}
 	sort.Slice(leaderboard, func(i, j int) bool {
-		return leaderboard[i].BradleyterrScore > leaderboard[j].BradleyterrScore
+		return leaderboard[i].Score > leaderboard[j].Score
 	})
 
 	response := &choicesv1.GetLeaderboardResponse{

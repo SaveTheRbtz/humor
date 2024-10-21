@@ -84,8 +84,8 @@ message GetLeaderboardRequest {
 message LeaderboardEntry {
   // Public model name.
   string model = 1;
-  // Bradley-Terry rating of the model.
-  double bradleyterr_score = 2;
+  // Score of the model.
+  double score = 2;
 }
 
 // GetLeaderboardResponse contains the leaderboard of joke models.

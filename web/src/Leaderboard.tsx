@@ -55,12 +55,12 @@ const Leaderboard: React.FC = () => {
         </thead>
         <tbody>
           {leaderboardEntries
-            .sort((a, b) => b.bradleyterrScore! - a.bradleyterrScore!)
+            .sort((a, b) => b.score! - a.score!)
             .map((entry, index) => (
               <tr key={entry.model}>
                 <td>{index + 1}</td>
                 <td>{entry.model}</td>
-                <td>{entry.bradleyterrScore!.toFixed(4)}</td>
+                <td>{entry.score!.toFixed(4)}</td>
               </tr>
             ))}
         </tbody>

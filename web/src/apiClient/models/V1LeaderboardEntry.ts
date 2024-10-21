@@ -26,11 +26,11 @@ export interface V1LeaderboardEntry {
      */
     model?: string;
     /**
-     * Bradley-Terry rating of the model.
+     * Score of the model.
      * @type {number}
      * @memberof V1LeaderboardEntry
      */
-    bradleyterrScore?: number;
+    score?: number;
 }
 
 /**
@@ -51,7 +51,7 @@ export function V1LeaderboardEntryFromJSONTyped(json: any, ignoreDiscriminator: 
     return {
         
         'model': json['model'] == null ? undefined : json['model'],
-        'bradleyterrScore': json['bradleyterrScore'] == null ? undefined : json['bradleyterrScore'],
+        'score': json['score'] == null ? undefined : json['score'],
     };
 }
 
@@ -62,7 +62,7 @@ export function V1LeaderboardEntryToJSON(value?: V1LeaderboardEntry | null): any
     return {
         
         'model': value['model'],
-        'bradleyterrScore': value['bradleyterrScore'],
+        'score': value['score'],
     };
 }
 

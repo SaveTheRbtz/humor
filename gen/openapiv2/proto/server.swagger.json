@@ -196,10 +196,10 @@
           "type": "string",
           "description": "Public model name."
         },
-        "bradleyterrScore": {
+        "score": {
           "type": "number",
           "format": "double",
-          "description": "Bradley-Terry rating of the model."
+          "description": "Score of the model."
         }
       },
       "description": "LeaderboardEntry contains the model name and its Bradley-Terry rating."
