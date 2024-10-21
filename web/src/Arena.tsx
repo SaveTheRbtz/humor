@@ -96,7 +96,7 @@ const Arena: React.FC = () => {
         />
       </div>
       <div className="additional-options">
-      <button className="button" onClick={() => handleVote(V1Winner.Left)}>Left is better</button>
+        <button className="button" onClick={() => handleVote(V1Winner.Left)}>Left is better</button>
         <button className="both-button" onClick={() => handleVote(V1Winner.Both)}>Both are great</button>
         <button className="neither-button" onClick={() => handleVote(V1Winner.None)}>Neither are good</button>
         <button className="button" onClick={() => handleVote(V1Winner.Right)}>Right is better</button>

@@ -1,72 +1,72 @@
 .about-container {
-    max-width: 800px;
+    max-width: 90%;
     margin: 0 auto;
-    padding: 20px;
+    padding: 2rem;
     font-family: Tahoma, Geneva, Verdana, sans-serif;
     line-height: 1.6;
     color: #333;
-  }
-  
-  .about-container h1 {
+}
+
+.about-container h1 {
     font-size: 2.5em;
     margin-bottom: 0.5em;
     text-align: center;
-  }
-  
-  .about-container h2 {
+}
+
+.about-container h2 {
     font-size: 1.8em;
     margin-top: 1.5em;
     margin-bottom: 0.5em;
     color: #2c3e50;
-    border-bottom: 2px solid #e1e1e1;
+    border-bottom: 0.125rem solid #e1e1e1;
     padding-bottom: 0.3em;
-  }
-  
-  .about-container p {
+}
+
+.about-container p {
     font-size: 1em;
     margin-bottom: 1em;
     text-align: justify;
-  }
-  
-  .about-container ul {
+}
+
+.about-container ul {
     margin-left: 1.5em;
     margin-bottom: 1em;
-  }
-  
-  .about-container li {
+}
+
+.about-container li {
     margin-bottom: 0.5em;
-  }
-  
-  .about-container a {
+}
+
+.about-container a {
     color: #3498db;
     text-decoration: none;
-  }
-  
-  .about-container a:hover {
+}
+
+.about-container a:hover {
     text-decoration: underline;
-  }
-  
-  .latex-reference {
+}
+
+.latex-reference {
     background-color: #f7f7f7;
-    padding: 15px;
-    border: 1px solid #e1e1e1;
+    padding: 1rem;
+    border: 0.0625rem solid #e1e1e1;
     overflow-x: auto;
     font-family: 'Courier New', Courier, monospace;
     font-size: 0.9em;
     margin-bottom: 1em;
-    border-radius: 4px;
-  }
-  
-  @media (max-width: 600px) {
+    border-radius: 0.25rem;
+}
+
+@media (max-width: 600px) {
     .about-container {
-      padding: 15px;
+        padding: 1rem;
     }
-  
+
     .about-container h1 {
-      font-size: 2em;
+        font-size: 2em;
     }
-  
+
     .about-container h2 {
-      font-size: 1.5em;
+        font-size: 1.5em;
     }
-  }
+}
