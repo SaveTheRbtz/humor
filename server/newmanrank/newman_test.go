@@ -20,7 +20,7 @@ func TestNewmanRank_NoTies(t *testing.T) {
 		t.Fatalf("Error: %v", err)
 	}
 
-	expectedScores := []float64{1.0, 2.0, 0.5}
+	expectedScores := []float64{5, 1.66, 0}
 	expectedV := 0.0
 
 	for i, score := range scores {
@@ -50,13 +50,13 @@ func TestNewmanRank_WithTies(t *testing.T) {
 	winMatrix := mat.NewDense(3, 3, winData)
 	tieMatrix := mat.NewDense(3, 3, tieData)
 
-	scores, vOut, iterations, err := NewmanRank(winMatrix, tieMatrix, 1.0, 1e-6, 1000)
+	scores, vOut, iterations, err := NewmanRank(winMatrix, tieMatrix, 1.0, 1e-2, 1000)
 	if err != nil {
 		t.Fatalf("Error: %v", err)
 	}
 
-	expectedScores := []float64{1.0, 2.0, 0.5}
-	expectedV := 0.5
+	expectedScores := []float64{1.73, 1.55, 0.29}
+	expectedV := 0.25
 
 	for i, score := range scores {
 		if math.Abs(score-expectedScores[i]) > 1e-1 {

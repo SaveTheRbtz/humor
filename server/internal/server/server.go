@@ -3,7 +3,6 @@ package server
 import (
 	"context"
 	"fmt"
-	"sort"
 
 	"sync/atomic"
 
@@ -18,7 +17,7 @@ import (
 
 	choicesv1 "github.com/SaveTheRbtz/humor/gen/go/proto"
 
-	"github.com/seanhagen/bradleyterry"
+	"github.com/SaveTheRbtz/humor/server/newmanrank"
 	"google.golang.org/api/iterator"
 
 	"github.com/google/uuid"
@@ -169,7 +168,6 @@ func (s *Server) GetLeaderboard(
 ) (*choicesv1.GetLeaderboardResponse, error) {
 	cached := s.leaderboardCache.Load()
 	if cached != nil && time.Since(cached.Timestamp) < 5*time.Minute {
-		// Return the cached data
 		s.logger.Debug("Returning cached leaderboard")
 		return cached.Data, nil
 	}
@@ -225,7 +223,7 @@ func (s *Server) GetLeaderboard(
 		jokeMap[docSnap.Ref.ID] = joke
 	}
 
-	allPairs := []bradleyterry.Pair{}
+	allPairs := make([]newmanrank.Comparison, 0, len(choices))
 	for _, choice := range choices {
 		leftJoke, ok := jokeMap[choice.LeftJokeID]
 		if !ok {
@@ -235,38 +233,46 @@ func (s *Server) GetLeaderboard(
 		if !ok {
 			continue
 		}
-
-		var winnerModel, loserModel string
-		switch *choice.Winner {
-		case choicesv1.Winner_LEFT:
-			winnerModel = leftJoke.Model
-			loserModel = rightJoke.Model
-		case choicesv1.Winner_RIGHT:
-			winnerModel = rightJoke.Model
-			loserModel = leftJoke.Model
-		default:
+		if leftJoke.Model == rightJoke.Model {
 			continue
 		}
 
-		allPairs = append(allPairs, bradleyterry.Pair{
-			Winner: winnerModel,
-			Loser:  loserModel,
-		})
+		comparison := newmanrank.Comparison{
+			Left:  leftJoke.Model,
+			Right: rightJoke.Model,
+		}
+		switch *choice.Winner {
+		case choicesv1.Winner_LEFT:
+			comparison.Winner = newmanrank.LeftWinner
+		case choicesv1.Winner_RIGHT:
+			comparison.Winner = newmanrank.RightWinner
+		case choicesv1.Winner_BOTH | choicesv1.Winner_NONE:
+			comparison.Winner = newmanrank.TieWinner
+		default:
+			continue
+		}
+		allPairs = append(allPairs, comparison)
 	}
 	s.logger.Debug("GetLeaderboard", zap.Int("allPairs", len(allPairs)))
 
-	// map[string]float64 - ModelID -> score
-	bt := bradleyterry.Model(allPairs)
-	leaderboard := []*choicesv1.LeaderboardEntry{}
-	for model, score := range bt {
+	winMatrix, tieMatrix, _, indexToName, err := newmanrank.BuildMatrices(allPairs)
+	if err != nil {
+		return nil, fmt.Errorf("failed to build matrices: %w", err)
+	}
+	// TODO(rbtz): use lower tolerance in dev.
+	scores, _, iterations, err := newmanrank.NewmanRank(winMatrix, tieMatrix, 1.0, 1e-3, 10000)
+	if err != nil {
+		return nil, fmt.Errorf("failed to calculate scores: %w", err)
+	}
+	s.logger.Debug("GetLeaderboard", zap.Int("iterations", iterations))
+
+	leaderboard := make([]*choicesv1.LeaderboardEntry, 0, len(scores))
+	for i, score := range scores {
 		leaderboard = append(leaderboard, &choicesv1.LeaderboardEntry{
-			Model: model,
+			Model: indexToName[i],
 			Score: score,
 		})
 	}
-	sort.Slice(leaderboard, func(i, j int) bool {
-		return leaderboard[i].Score > leaderboard[j].Score
-	})
 
 	response := &choicesv1.GetLeaderboardResponse{
 		Entries: leaderboard,
