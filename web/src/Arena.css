@@ -10,31 +10,23 @@
   margin-top: 2%;
 }
 
-.close-button {
-  position: absolute;
-  top: 1%;
-  right: 1%;
-  background: transparent;
-  border: none;
-  font-size: 1.5em;
-  color: #aaa;
-  cursor: pointer;
-}
-
-.close-button:hover {
-  color: #ff5c5c;
-}
-
 .additional-options {
+  display: flex;
+  flex-wrap: nowrap;
   margin-top: 3%;
 }
 
 .additional-options button {
-  margin: 0 1%;
-  padding: 0.5em 1em;
+  flex: 1;
+  margin: 1%;
+  padding: 3%;
+  font-size: 1em;
+  white-space: normal;
+  word-wrap: break-word;
+  background-color: #007bff;
   color: #fff;
   border: none;
-  border-radius: 0.25em;
+  border-radius: 0.25em;;
   cursor: pointer;
 }
 
