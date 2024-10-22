@@ -4,23 +4,31 @@ function About() {
   return (
     <div className="about-container">
       <p>
+        <h3>Humor Arena</h3>
+        <p>It is common ground that modern LLMs are bad at humor generation. Even top-shelf models tend to memorize and repeat a few simple jokes without any originality.</p>
+        <p>In our recent paper {' '}
+        <a href="https://computationalcreativity.net/iccc24/papers/ICCC24_paper_128.pdf" target="_blank" rel="noopener noreferrer">
+          "Humor Mechanics: Advancing Humor Generation with Multistep Reasoning"
+        </a>{' '} (presented at the International Conference on Computational Creativity 2024), we show that the approach based on multistep reasoning can replicate the creativity process good enough to generate jokes which are on par with human-written jokes (with a top quality subset of "reddit jokes" dataset) according to the blind human labeling results. 
+          For more details, you can read the {' '}
+          <a href="https://arxiv.org/abs/2405.07280" target="_blank" rel="noopener noreferrer">full paper on arXiv</a>
+          {' '}. 
+          We also shared our {' '}
+          <a href="https://github.com/altsoph/humor-mechanics" target="_blank" rel="noopener noreferrer">results and data</a>
+          {' '} to facilitate future research.</p>
+        
         <b>Humor Arena</b> is based on the research paper{' '}
         <a href="https://arxiv.org/abs/2405.07280" target="_blank" rel="noopener noreferrer">
           "Humor Mechanics: Advancing Humor Generation with Multistep Reasoning"
         </a>{' '}
         by Alexey Tikhonov and Pavel Shtykovskiy.
       </p>
-
-      <h2>Brief Summary</h2>
-      <p>
-        The authors explore the generation of one-liner jokes using multi-step reasoning.
-        They developed a prototype for humor generation and conducted experiments to
-        evaluate its effectiveness compared to human-created jokes and baseline models.
-        Their findings show that multi-step reasoning consistently improves the quality
-        of generated humor.
+      <p><strong>Now we want to go further:</strong> is there a way to improve reasoning schema? are some models more potent in terms of humor generation than others? To investigate it, we made this Humor Arena to ask people to {' '}
+          <a href="https://humor.ph34r.me/arena" target="_blank" rel="noopener noreferrer">help us with blind side-by-side labeling</a>
+          {' '}.
       </p>
-
-      <h2>LaTeX Reference</h2>
+      <p>
+      <h3>Reference</h3>
       <pre className="latex-reference">
 {`@article{tikhonov2024humor,
   title={Humor Mechanics: Advancing Humor Generation with Multistep Reasoning},
@@ -29,46 +37,6 @@ function About() {
   year={2024}
 }`}
       </pre>
-
-      <h2>Detailed Summary</h2>
-      <p>
-        In their paper, the authors address the challenge of generating high-quality,
-        novel humor using large language models (LLMs). While LLMs have shown promise
-        in natural language generation, producing truly creative and funny jokes remains
-        difficult. The researchers propose a data-driven approach to reconstruct the
-        mechanics of humor without relying on existing humor theories.
-      </p>
-      <p>
-        Their method involves:
-      </p>
-      <ul>
-        <li>
-          Inferring a humor-generation policy directly from a dataset of jokes using
-          LLMs in a zero-shot manner.
-        </li>
-        <li>
-          Generating humor based on a seed topic and brainstorming associations to
-          connect distant concepts.
-        </li>
-        <li>
-          Evaluating the generated jokes through human annotation to assess funniness
-          and novelty.
-        </li>
-      </ul>
-      <p>
-        The results indicate that this multi-step reasoning approach not only improves
-        the funniness of the jokes but also increases their novelty compared to
-        zero-shot GPT-4 outputs and human-generated jokes from Reddit datasets.
-      </p>
-      <p>
-        The paper also discusses the subjectivity of humor and the importance of
-        considering cultural preferences and ethical concerns in humor generation.
-      </p>
-      <p>
-        For more details, you can read the full paper on{' '}
-        <a href="https://arxiv.org/abs/2405.07280" target="_blank" rel="noopener noreferrer">
-          arXiv
-        </a>.
       </p>
     </div>
   );
