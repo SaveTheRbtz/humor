@@ -16,12 +16,6 @@ function About() {
           We also shared our {' '}
           <a href="https://github.com/altsoph/humor-mechanics" target="_blank" rel="noopener noreferrer">results and data</a>
           {' '} to facilitate future research.</p>
-        
-        <b>Humor Arena</b> is based on the research paper{' '}
-        <a href="https://arxiv.org/abs/2405.07280" target="_blank" rel="noopener noreferrer">
-          "Humor Mechanics: Advancing Humor Generation with Multistep Reasoning"
-        </a>{' '}
-        by Alexey Tikhonov and Pavel Shtykovskiy.
       </p>
       <p><strong>Now we want to go further:</strong> is there a way to improve reasoning schema? are some models more potent in terms of humor generation than others? To investigate it, we made this Humor Arena to ask people to {' '}
           <a href="https://humor.ph34r.me/arena" target="_blank" rel="noopener noreferrer">help us with blind side-by-side labeling</a>
