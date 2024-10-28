@@ -10,6 +10,7 @@ const Leaderboard: React.FC = () => {
   const [leaderboardEntries, setLeaderboardEntries] = useState<V1LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [tooltipVisible, setTooltipVisible] = useState<boolean>(false);
 
   const fetchLeaderboard = async () => {
     setLoading(true);
@@ -28,6 +29,10 @@ const Leaderboard: React.FC = () => {
   useEffect(() => {
     fetchLeaderboard();
   }, []);
+
+  const toggleTooltip = () => {
+    setTooltipVisible(!tooltipVisible);
+  };
 
   if (loading) {
     return <div>Loading leaderboard...</div>;
@@ -51,7 +56,19 @@ const Leaderboard: React.FC = () => {
             <th>Rank</th>
             <th>Model</th>
             <th>Votes</th>
-            <th>NewmanScore</th>
+            <th>
+              NewmanScore
+              <span className="tooltip" onClick={toggleTooltip}>
+                 &#9432;
+                {tooltipVisible && (
+                  <span className="tooltiptext">
+                    <a href="https://arxiv.org/abs/2207.00076" target="_blank" rel="noopener noreferrer">
+                      Efficient computation of rankings from pairwise comparisons
+                    </a>
+                  </span>
+                )}
+              </span>
+            </th>
           </tr>
         </thead>
         <tbody>
