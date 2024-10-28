@@ -1,4 +1,7 @@
 .footer {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
     text-align: center;
     padding: 1em;
     background-color: #333;
@@ -9,17 +12,9 @@
 }
 
 .footer-link {
+    margin: 0 10px;
     color: #fff;
     text-decoration: none;
     display: inline-flex;
     align-items: center;
-}
-
-.footer-link:hover {
-    text-decoration: underline;
-}
-
-body {
-    margin: 0;
-    padding-bottom: 3em;
 }
