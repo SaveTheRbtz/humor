@@ -50,17 +50,19 @@ const Leaderboard: React.FC = () => {
           <tr>
             <th>Rank</th>
             <th>Model</th>
-            <th>Score</th>
+            <th>Votes</th>
+            <th>NewmanScore</th>
           </tr>
         </thead>
         <tbody>
           {leaderboardEntries
-            .sort((a, b) => b.score! - a.score!)
+            .sort((a, b) => b.newmanScore! - a.newmanScore!)
             .map((entry, index) => (
               <tr key={entry.model}>
                 <td>{index + 1}</td>
                 <td>{entry.model}</td>
-                <td>{entry.score!.toFixed(4)}</td>
+                <td>{entry.votes}</td>
+                <td>{entry.newmanScore!.toFixed(4)}</td>
               </tr>
             ))}
         </tbody>

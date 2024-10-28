@@ -26,11 +26,17 @@ export interface V1LeaderboardEntry {
      */
     model?: string;
     /**
-     * Score of the model.
+     * Newman Score of the model.
      * @type {number}
      * @memberof V1LeaderboardEntry
      */
-    score?: number;
+    newmanScore?: number;
+    /**
+     * Total votes for the model.
+     * @type {string}
+     * @memberof V1LeaderboardEntry
+     */
+    votes?: string;
 }
 
 /**
@@ -51,7 +57,8 @@ export function V1LeaderboardEntryFromJSONTyped(json: any, ignoreDiscriminator: 
     return {
         
         'model': json['model'] == null ? undefined : json['model'],
-        'score': json['score'] == null ? undefined : json['score'],
+        'newmanScore': json['newmanScore'] == null ? undefined : json['newmanScore'],
+        'votes': json['votes'] == null ? undefined : json['votes'],
     };
 }
 
@@ -62,7 +69,8 @@ export function V1LeaderboardEntryToJSON(value?: V1LeaderboardEntry | null): any
     return {
         
         'model': value['model'],
-        'score': value['score'],
+        'newmanScore': value['newmanScore'],
+        'votes': value['votes'],
     };
 }
 

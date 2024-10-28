@@ -233,6 +233,14 @@ func (s *Server) GetLeaderboard(
 		jokeMap[docSnap.Ref.ID] = joke
 	}
 
+	modelVotes := make(map[string]uint64)
+	for _, joke := range jokeMap {
+		if _, ok := modelVotes[joke.Model]; ok {
+			continue
+		}
+		modelVotes[joke.Model] = 0
+	}
+
 	allPairs := make([]newmanrank.Comparison, 0, len(choices))
 	for _, choice := range choices {
 		leftJoke, ok := jokeMap[choice.LeftJokeID]
@@ -253,10 +261,14 @@ func (s *Server) GetLeaderboard(
 		}
 		switch *choice.Winner {
 		case choicesv1.Winner_LEFT:
+			modelVotes[leftJoke.Model]++
 			comparison.Winner = newmanrank.LeftWinner
 		case choicesv1.Winner_RIGHT:
+			modelVotes[rightJoke.Model]++
 			comparison.Winner = newmanrank.RightWinner
 		case choicesv1.Winner_BOTH | choicesv1.Winner_NONE:
+			modelVotes[leftJoke.Model]++
+			modelVotes[rightJoke.Model]++
 			comparison.Winner = newmanrank.TieWinner
 		default:
 			continue
@@ -279,8 +291,9 @@ func (s *Server) GetLeaderboard(
 	leaderboard := make([]*choicesv1.LeaderboardEntry, 0, len(scores))
 	for i, score := range scores {
 		leaderboard = append(leaderboard, &choicesv1.LeaderboardEntry{
-			Model: indexToName[i],
-			Score: score,
+			Model:       indexToName[i],
+			NewmanScore: score,
+			Votes:       modelVotes[indexToName[i]],
 		})
 	}
 

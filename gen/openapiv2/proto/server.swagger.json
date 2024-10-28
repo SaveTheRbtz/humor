@@ -196,10 +196,15 @@
           "type": "string",
           "description": "Public model name."
         },
-        "score": {
+        "newmanScore": {
           "type": "number",
           "format": "double",
-          "description": "Score of the model."
+          "description": "Newman Score of the model."
+        },
+        "votes": {
+          "type": "string",
+          "format": "uint64",
+          "description": "Total votes for the model."
         }
       },
       "description": "LeaderboardEntry contains the model name and its Bradley-Terry rating."
