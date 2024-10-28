@@ -24,9 +24,14 @@ import (
 )
 
 // TODO(rbtz): move to a cronjob.
-type LeaderboardCache struct {
-	Data      *choicesv1.GetLeaderboardResponse
-	Timestamp time.Time
+type leaderboardCache struct {
+	response  *choicesv1.GetLeaderboardResponse
+	timestamp time.Time
+}
+
+type themesCache struct {
+	topics    []string
+	timestamp time.Time
 }
 
 type Theme struct {
@@ -60,13 +65,14 @@ type Server struct {
 	firestoreClient  *firestore.Client
 	rand             *insecureRand.Rand
 	themeGetter      *randomDocumentGetterImpl[Theme]
-	leaderboardCache atomic.Pointer[LeaderboardCache]
+	leaderboardCache atomic.Pointer[leaderboardCache]
 }
 
 func NewServer(firestoreClient *firestore.Client, logger *zap.Logger) (*Server, error) {
 	randomThemeGetter, err := NewRandomDocumentGetter[Theme](
 		firestoreClient,
 		firestoreClient.Collection("themes").Query,
+		time.Minute,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create random theme getter: %w", err)
@@ -93,6 +99,7 @@ func (s *Server) GetChoices(
 	jokeGetter, err := NewRandomDocumentGetter[Joke](
 		s.firestoreClient,
 		s.firestoreClient.Collection("jokes").Query.Where("theme_id", "==", themeDoc.Ref.ID),
+		time.Duration(0),
 	)
 	jokes, jokeDocs, err := jokeGetter.GetRandomDocuments(ctx, 2)
 	if err != nil {
@@ -167,9 +174,9 @@ func (s *Server) GetLeaderboard(
 	req *choicesv1.GetLeaderboardRequest,
 ) (*choicesv1.GetLeaderboardResponse, error) {
 	cached := s.leaderboardCache.Load()
-	if cached != nil && time.Since(cached.Timestamp) < 5*time.Minute {
+	if cached != nil && time.Since(cached.timestamp) < 5*time.Minute {
 		s.logger.Debug("Returning cached leaderboard")
-		return cached.Data, nil
+		return cached.response, nil
 	}
 
 	allChoicesDocs := s.firestoreClient.Collection("choices").Documents(ctx)
@@ -278,9 +285,9 @@ func (s *Server) GetLeaderboard(
 		Entries: leaderboard,
 	}
 
-	newCache := &LeaderboardCache{
-		Data:      response,
-		Timestamp: time.Now(),
+	newCache := &leaderboardCache{
+		response:  response,
+		timestamp: time.Now(),
 	}
 	s.leaderboardCache.Store(newCache)
 
