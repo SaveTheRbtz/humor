@@ -209,6 +209,9 @@ func (s *Server) GetLeaderboard(
 
 		choices = append(choices, choice)
 	}
+	if len(choices) == 0 {
+		return nil, status.Error(codes.NotFound, "No rated choices found")
+	}
 
 	jokeDocRefs := make([]*firestore.DocumentRef, 0, len(jokeIDs))
 	for jokeID := range jokeIDs {
