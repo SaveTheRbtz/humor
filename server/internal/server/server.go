@@ -200,9 +200,6 @@ func (s *Server) GetLeaderboard(
 		if choice.Winner == nil {
 			continue
 		}
-		if *choice.Winner != choicesv1.Winner_LEFT && *choice.Winner != choicesv1.Winner_RIGHT {
-			continue
-		}
 
 		jokeIDs[choice.LeftJokeID] = struct{}{}
 		jokeIDs[choice.RightJokeID] = struct{}{}
@@ -241,17 +238,21 @@ func (s *Server) GetLeaderboard(
 		modelVotes[joke.Model] = 0
 	}
 
+	skipped := 0
 	allPairs := make([]newmanrank.Comparison, 0, len(choices))
 	for _, choice := range choices {
 		leftJoke, ok := jokeMap[choice.LeftJokeID]
 		if !ok {
+			skipped++
 			continue
 		}
 		rightJoke, ok := jokeMap[choice.RightJokeID]
 		if !ok {
+			skipped++
 			continue
 		}
 		if leftJoke.Model == rightJoke.Model {
+			skipped++
 			continue
 		}
 
@@ -266,23 +267,24 @@ func (s *Server) GetLeaderboard(
 		case choicesv1.Winner_RIGHT:
 			modelVotes[rightJoke.Model]++
 			comparison.Winner = newmanrank.RightWinner
-		case choicesv1.Winner_BOTH | choicesv1.Winner_NONE:
+		case choicesv1.Winner_BOTH, choicesv1.Winner_NONE:
 			modelVotes[leftJoke.Model]++
 			modelVotes[rightJoke.Model]++
 			comparison.Winner = newmanrank.TieWinner
 		default:
+			skipped++
 			continue
 		}
 		allPairs = append(allPairs, comparison)
 	}
-	s.logger.Debug("GetLeaderboard", zap.Int("allPairs", len(allPairs)))
+	s.logger.Debug("GetLeaderboard", zap.Int("allPairs", len(allPairs)), zap.Int("skipped", skipped))
 
 	winMatrix, tieMatrix, _, indexToName, err := newmanrank.BuildMatrices(allPairs)
 	if err != nil {
 		return nil, fmt.Errorf("failed to build matrices: %w", err)
 	}
 	// TODO(rbtz): use lower tolerance in dev.
-	scores, _, iterations, err := newmanrank.NewmanRank(winMatrix, tieMatrix, 1.0, 1e-3, 10000)
+	scores, _, iterations, err := newmanrank.NewmanRank(winMatrix, tieMatrix, 1.0, 1e-2, 10000)
 	if err != nil {
 		return nil, fmt.Errorf("failed to calculate scores: %w", err)
 	}
