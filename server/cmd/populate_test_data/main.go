@@ -55,11 +55,11 @@ func main() {
 	themeToID := make(map[string]string)
 	for themeName := range themes {
 		rnd := rand.Float64()
-		ref_id, err := addTheme(ctx, client, themeName, rnd)
+		ref, err := addTheme(ctx, client, themeName, rnd)
 		if err != nil {
 			log.Fatalf("Failed to add theme %s: %v", themeName, err)
 		}
-		themeToID[themeName] = ref_id
+		themeToID[themeName] = ref.ID
 		fmt.Printf("Added theme: %f: %s\n", rnd, themeName)
 	}
 
@@ -76,17 +76,16 @@ func main() {
 	fmt.Println("Data population completed.")
 }
 
-func addTheme(ctx context.Context, client *firestore.Client, themeName string, rnd float64) (string, error) {
+func addTheme(ctx context.Context, client *firestore.Client, themeName string, rnd float64) (*firestore.DocumentRef, error) {
 	theme := serverImpl.Theme{
 		Text:   themeName,
 		Random: rnd,
 	}
 	docRef, _, err := client.Collection("themes").Add(ctx, theme)
-	return docRef.ID, err
+	return docRef, err
 }
 
 func addJoke(ctx context.Context, client *firestore.Client, theme string, text string, rnd float64) error {
-
 	joke := serverImpl.Joke{
 		ThemeID: theme,
 		Text:    text,
