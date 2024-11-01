@@ -14,7 +14,7 @@ local_resource(
 
 local_resource(
     'web',
-    serve_cmd='npm start',
+    serve_cmd='npm install && npm start',
     serve_dir='web',
     serve_env={'REACT_APP_API_BASE_URL': 'http://localhost:8080'},
     deps=['web/src/'],
