@@ -1,7 +1,10 @@
+__pycache__
+.bazelversion
+.DS_Store
+.pytest_cache/*
+.python-version
+bazel-*
 data/*
 input/*
-output/*
 node_modules
-__pycache__
-.DS_Store
-.python-version
+output/*
