@@ -59,6 +59,7 @@ const Leaderboard: React.FC = () => {
             <th>
               ELO
             </th>
+            {/*
             <th>
               Newman
               <span className="tooltip" onClick={toggleTooltip}>
@@ -73,6 +74,7 @@ const Leaderboard: React.FC = () => {
                 )}
               </span>
             </th>
+            */}
           </tr>
         </thead>
         <tbody>
@@ -84,7 +86,9 @@ const Leaderboard: React.FC = () => {
                 <td>{entry.model}</td>
                 <td>{entry.votes}</td>
                 <td>{entry.eloScore!.toFixed(0)} +{entry.eloCIUpper!.toFixed(0)}/-{entry.eloCILower!.toFixed(0)}</td>
+                {/*
                 <td>{entry.newmanScore!.toFixed(2)} +{entry.newmanCIUpper!.toFixed(0)}/-{entry.newmanCILower!.toFixed(0)}</td>
+                */}
               </tr>
             ))}
         </tbody>
