@@ -14,9 +14,8 @@ local_resource(
 
 local_resource(
     'leaderboard',
-    serve_cmd='bazel run //scripts/leaderboard:leaderboard_bin',
-    serve_dir='web',
-    serve_env={'FIRESTORE_EMULATOR_HOST': 'localhost:8081'},
+    cmd='bazel run //scripts/leaderboard:leaderboard_bin',
+    env={'FIRESTORE_EMULATOR_HOST': 'localhost:8081'},
     deps=['scripts/leaderboard/'],
     resource_deps=['populate_database'],
 )
@@ -37,5 +36,3 @@ local_resource(
     deps=['server/'],
     resource_deps=['populate_database'],
 )
-
-

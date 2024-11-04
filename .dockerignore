@@ -1,7 +1,9 @@
-data/*
-input/*
-output/*
-node_modules
 __pycache__
+.bazelversion
 .DS_Store
+.mypy_cache
+.pytest_cache
 .python-version
+bazel-*
+node_modules
+web/node_modules

@@ -1,10 +1,11 @@
 package server
 
 import (
+	"bytes"
 	"context"
 	"fmt"
-
-	"sync/atomic"
+	"os/exec"
+	"sync"
 
 	"go.uber.org/zap"
 
@@ -17,16 +18,20 @@ import (
 
 	choicesv1 "github.com/SaveTheRbtz/humor/gen/go/proto"
 
-	"github.com/SaveTheRbtz/humor/server/newmanrank"
 	"google.golang.org/api/iterator"
 
 	"github.com/google/uuid"
 )
 
-// TODO(rbtz): move to a cronjob.
-type leaderboardCache struct {
-	response  *choicesv1.GetLeaderboardResponse
-	timestamp time.Time
+type leaderboardEntry struct {
+	Model         string  `firestore:"model"`
+	Votes         int64   `firestore:"votes"`
+	NewmanScore   float64 `firestore:"newman_score"`
+	NewmanCiLower float64 `firestore:"newman_ci_lower"`
+	NewmanCiUpper float64 `firestore:"newman_ci_upper"`
+	EloScore      float64 `firestore:"elo_score"`
+	EloCiLower    float64 `firestore:"elo_ci_lower"`
+	EloCiUpper    float64 `firestore:"elo_ci_upper"`
 }
 
 type themesCache struct {
@@ -61,14 +66,20 @@ type Choice struct {
 type Server struct {
 	choicesv1.UnimplementedArenaServer
 
-	logger           *zap.Logger
-	firestoreClient  *firestore.Client
-	rand             *insecureRand.Rand
-	themeGetter      *randomDocumentGetterImpl[Theme]
-	leaderboardCache atomic.Pointer[leaderboardCache]
+	logger          *zap.Logger
+	firestoreClient *firestore.Client
+	rand            *insecureRand.Rand
+	themeGetter     *randomDocumentGetterImpl[Theme]
+
+	leaderboardUpdate    *sync.Mutex
+	leaderboardUpdateCmd string
 }
 
-func NewServer(firestoreClient *firestore.Client, logger *zap.Logger) (*Server, error) {
+func NewServer(
+	firestoreClient *firestore.Client,
+	logger *zap.Logger,
+	leaderboardUpdateCmd string,
+) (*Server, error) {
 	randomThemeGetter, err := NewRandomDocumentGetter[Theme](
 		firestoreClient,
 		firestoreClient.Collection("themes").Query,
@@ -82,6 +93,9 @@ func NewServer(firestoreClient *firestore.Client, logger *zap.Logger) (*Server, 
 		logger:          logger,
 		firestoreClient: firestoreClient,
 		themeGetter:     randomThemeGetter,
+
+		leaderboardUpdate:    &sync.Mutex{},
+		leaderboardUpdateCmd: leaderboardUpdateCmd,
 	}, nil
 }
 
@@ -173,141 +187,75 @@ func (s *Server) GetLeaderboard(
 	ctx context.Context,
 	req *choicesv1.GetLeaderboardRequest,
 ) (*choicesv1.GetLeaderboardResponse, error) {
-	cached := s.leaderboardCache.Load()
-	if cached != nil && time.Since(cached.timestamp) < 5*time.Minute {
-		s.logger.Debug("Returning cached leaderboard")
-		return cached.response, nil
+	leaderboardCollection := s.firestoreClient.Collection("leaderboard")
+	query := leaderboardCollection.OrderBy("created_at", firestore.Desc).Limit(1)
+	docIter := query.Documents(ctx)
+	docSnap, err := docIter.Next()
+	if err == iterator.Done {
+		return nil, status.Error(codes.NotFound, "No leaderboard found")
 	}
-
-	allChoicesDocs := s.firestoreClient.Collection("choices").Documents(ctx)
-	choices := []Choice{}
-	jokeIDs := make(map[string]struct{})
-
-	for {
-		doc, err := allChoicesDocs.Next()
-		if err == iterator.Done {
-			break
-		}
-		if err != nil {
-			return nil, fmt.Errorf("failed to get choices: %w", err)
-		}
-
-		var choice Choice
-		if err := doc.DataTo(&choice); err != nil {
-			return nil, fmt.Errorf("failed to convert choice to struct: %w", err)
-		}
-
-		if choice.Winner == nil {
-			continue
-		}
-
-		jokeIDs[choice.LeftJokeID] = struct{}{}
-		jokeIDs[choice.RightJokeID] = struct{}{}
-
-		choices = append(choices, choice)
-	}
-	if len(choices) == 0 {
-		return nil, status.Error(codes.NotFound, "No rated choices found")
-	}
-
-	jokeDocRefs := make([]*firestore.DocumentRef, 0, len(jokeIDs))
-	for jokeID := range jokeIDs {
-		docRef := s.firestoreClient.Collection("jokes").Doc(jokeID)
-		jokeDocRefs = append(jokeDocRefs, docRef)
-	}
-
-	jokeDocs, err := s.firestoreClient.GetAll(ctx, jokeDocRefs)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get jokes: %w", err)
+		return nil, fmt.Errorf("failed to get leaderboard: %w", err)
 	}
 
-	jokeMap := make(map[string]Joke)
-	for _, docSnap := range jokeDocs {
-		joke := Joke{}
-		if err := docSnap.DataTo(&joke); err != nil {
-			return nil, fmt.Errorf("failed to convert joke to struct: %w", err)
-		}
-		jokeMap[docSnap.Ref.ID] = joke
+	var leaderboardDoc struct {
+		Leaderboard []leaderboardEntry `firestore:"leaderboard"`
+		CreatedAt   time.Time          `firestore:"created_at"`
+	}
+	if err := docSnap.DataTo(&leaderboardDoc); err != nil {
+		return nil, fmt.Errorf("failed to parse leaderboard document: %w", err)
 	}
 
-	modelVotes := make(map[string]uint64)
-	for _, joke := range jokeMap {
-		if _, ok := modelVotes[joke.Model]; ok {
-			continue
+	// Map the entries to choicesv1.LeaderboardEntry
+	entries := make([]*choicesv1.LeaderboardEntry, 0, len(leaderboardDoc.Leaderboard))
+	for _, entryData := range leaderboardDoc.Leaderboard {
+		entry := &choicesv1.LeaderboardEntry{
+			Model:         entryData.Model,
+			Votes:         uint64(entryData.Votes),
+			NewmanScore:   entryData.NewmanScore,
+			NewmanCILower: entryData.NewmanCiLower,
+			NewmanCIUpper: entryData.NewmanCiUpper,
+			EloScore:      entryData.EloScore,
+			EloCILower:    entryData.EloCiLower,
+			EloCIUpper:    entryData.EloCiUpper,
 		}
-		modelVotes[joke.Model] = 0
+
+		entries = append(entries, entry)
 	}
 
-	skipped := 0
-	allPairs := make([]newmanrank.Comparison, 0, len(choices))
-	for _, choice := range choices {
-		leftJoke, ok := jokeMap[choice.LeftJokeID]
-		if !ok {
-			skipped++
-			continue
-		}
-		rightJoke, ok := jokeMap[choice.RightJokeID]
-		if !ok {
-			skipped++
-			continue
-		}
-		if leftJoke.Model == rightJoke.Model {
-			skipped++
-			continue
-		}
+	return &choicesv1.GetLeaderboardResponse{
+		Entries: entries,
+	}, nil
+}
 
-		comparison := newmanrank.Comparison{
-			Left:  leftJoke.Model,
-			Right: rightJoke.Model,
-		}
-		switch *choice.Winner {
-		case choicesv1.Winner_LEFT:
-			modelVotes[leftJoke.Model]++
-			comparison.Winner = newmanrank.LeftWinner
-		case choicesv1.Winner_RIGHT:
-			modelVotes[rightJoke.Model]++
-			comparison.Winner = newmanrank.RightWinner
-		case choicesv1.Winner_BOTH, choicesv1.Winner_NONE:
-			modelVotes[leftJoke.Model]++
-			modelVotes[rightJoke.Model]++
-			comparison.Winner = newmanrank.TieWinner
-		default:
-			skipped++
-			continue
-		}
-		allPairs = append(allPairs, comparison)
+func (s *Server) RegenerateLeadeboard(
+	ctx context.Context,
+	req *choicesv1.RegenerateLeaderboardRequest,
+) (*choicesv1.RegenerateLeaderboardResponse, error) {
+	if s.leaderboardUpdateCmd == "" {
+		return nil, status.Error(codes.Unimplemented, "Leaderboard update is not configured")
 	}
-	s.logger.Debug("GetLeaderboard", zap.Int("allPairs", len(allPairs)), zap.Int("skipped", skipped))
+	s.logger.Info("RegenerateLeaderboard", zap.String("cmd", s.leaderboardUpdateCmd))
 
-	winMatrix, tieMatrix, _, indexToName, err := newmanrank.BuildMatrices(allPairs)
+	s.leaderboardUpdate.Lock()
+	defer s.leaderboardUpdate.Unlock()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
+	defer cancel()
+
+	var stderr bytes.Buffer
+	cmd := exec.CommandContext(ctx, "sh", "-c", s.leaderboardUpdateCmd)
+	cmd.Stderr = &stderr
+	err := cmd.Run()
+
+	if ctx.Err() == context.DeadlineExceeded {
+		_ = cmd.Process.Kill()
+		return nil, status.Error(codes.DeadlineExceeded, "Leaderboard update timed out")
+	}
 	if err != nil {
-		return nil, fmt.Errorf("failed to build matrices: %w", err)
-	}
-	// TODO(rbtz): use lower tolerance in dev.
-	scores, _, iterations, err := newmanrank.NewmanRank(winMatrix, tieMatrix, 1.0, 1e-2, 10000)
-	if err != nil {
-		return nil, fmt.Errorf("failed to calculate scores: %w", err)
-	}
-	s.logger.Debug("GetLeaderboard", zap.Int("iterations", iterations))
-
-	leaderboard := make([]*choicesv1.LeaderboardEntry, 0, len(scores))
-	for i, score := range scores {
-		leaderboard = append(leaderboard, &choicesv1.LeaderboardEntry{
-			Model:       indexToName[i],
-			NewmanScore: score,
-			Votes:       modelVotes[indexToName[i]],
-		})
+		s.logger.Error("Failed to regenerate leaderboard", zap.Error(err))
+		return nil, status.Errorf(codes.Internal, "Failed to regenerate leaderboard: %v: %s", err, stderr.String())
 	}
 
-	response := &choicesv1.GetLeaderboardResponse{
-		Entries: leaderboard,
-	}
-
-	newCache := &leaderboardCache{
-		response:  response,
-		timestamp: time.Now(),
-	}
-	s.leaderboardCache.Store(newCache)
-
-	return response, nil
+	return &choicesv1.RegenerateLeaderboardResponse{}, nil
 }

@@ -8,7 +8,7 @@ check-deps:
 
 buf-gen: check-deps
 	@echo "Running buf generate..."
-	buf generate
+	buf generate --path proto/
 
 gen-api-client: check-deps
 	@echo "Generating TypeScript API client..."
@@ -21,11 +21,11 @@ generate: buf-gen gen-api-client
 	@echo "Code generation completed successfully."
 
 build:
-	@echo "Building Docker image..."
-	docker build --platform linux/amd64 -t gcr.io/humor-arena/server:latest --target app .
+	@echo "Building server Docker image..."
+	docker build -f Dockerfile --platform linux/amd64 -t gcr.io/humor-arena/server:latest --target app .
 
 deploy: build
-	@echo "Pushing Docker image to Google Container Registry..."
+	@echo "Pushing Docker images to Google Container Registry..."
 	docker push gcr.io/humor-arena/server:latest
 	@echo "Deploying to Google Cloud Run..."
 	gcloud run deploy humor-arena \

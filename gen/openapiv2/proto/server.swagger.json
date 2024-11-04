@@ -110,6 +110,29 @@
           "Arena"
         ]
       }
+    },
+    "/v1/regenerateLeaderboard": {
+      "post": {
+        "summary": "Regenerate leaderboard.",
+        "operationId": "Arena_RegenerateLeadeboard",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1RegenerateLeaderboardResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "Arena"
+        ]
+      }
     }
   },
   "definitions": {
@@ -196,15 +219,35 @@
           "type": "string",
           "description": "Public model name."
         },
+        "votes": {
+          "type": "string",
+          "format": "uint64",
+          "description": "Total votes for the model."
+        },
         "newmanScore": {
           "type": "number",
           "format": "double",
           "description": "Newman Score of the model."
         },
-        "votes": {
-          "type": "string",
-          "format": "uint64",
-          "description": "Total votes for the model."
+        "newmanCILower": {
+          "type": "number",
+          "format": "double"
+        },
+        "newmanCIUpper": {
+          "type": "number",
+          "format": "double"
+        },
+        "eloScore": {
+          "type": "number",
+          "format": "double"
+        },
+        "eloCILower": {
+          "type": "number",
+          "format": "double"
+        },
+        "eloCIUpper": {
+          "type": "number",
+          "format": "double"
         }
       },
       "description": "LeaderboardEntry contains the model name and its Bradley-Terry rating."
@@ -212,6 +255,9 @@
     "v1RateChoicesResponse": {
       "type": "object",
       "description": "TODO(rbtz): return jokes generation parameters: model, policy, etc."
+    },
+    "v1RegenerateLeaderboardResponse": {
+      "type": "object"
     },
     "v1Winner": {
       "type": "string",

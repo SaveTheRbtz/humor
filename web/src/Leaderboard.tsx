@@ -57,11 +57,15 @@ const Leaderboard: React.FC = () => {
             <th>Model</th>
             <th>Votes</th>
             <th>
-              NewmanScore
+              ELO
+            </th>
+            <th>
+              Newman
               <span className="tooltip" onClick={toggleTooltip}>
                  &#9432;
                 {tooltipVisible && (
                   <span className="tooltiptext">
+                    Newman Score
                     <a href="https://arxiv.org/abs/2207.00076" target="_blank" rel="noopener noreferrer">
                       Efficient computation of rankings from pairwise comparisons
                     </a>
@@ -73,13 +77,14 @@ const Leaderboard: React.FC = () => {
         </thead>
         <tbody>
           {leaderboardEntries
-            .sort((a, b) => b.newmanScore! - a.newmanScore!)
+            .sort((a, b) => b.eloScore! - a.eloScore!)
             .map((entry, index) => (
               <tr key={entry.model}>
                 <td>{index + 1}</td>
                 <td>{entry.model}</td>
                 <td>{entry.votes}</td>
-                <td>{entry.newmanScore!.toFixed(4)}</td>
+                <td>{entry.eloScore!.toFixed(0)} +{entry.eloCIUpper!.toFixed(0)}/-{entry.eloCILower!.toFixed(0)}</td>
+                <td>{entry.newmanScore!.toFixed(2)} +{entry.newmanCIUpper!.toFixed(0)}/-{entry.newmanCILower!.toFixed(0)}</td>
               </tr>
             ))}
         </tbody>

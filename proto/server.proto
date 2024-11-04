@@ -28,6 +28,12 @@ service Arena {
       get : "/v1/leaderboard"
     };
   }
+  // Regenerate leaderboard.
+  rpc RegenerateLeadeboard(RegenerateLeaderboardRequest) returns (RegenerateLeaderboardResponse) {
+    option (google.api.http) = {
+      post : "/v1/regenerateLeaderboard"
+    };
+  }
 }
 
 message GetChoicesRequest {
@@ -84,11 +90,20 @@ message GetLeaderboardRequest {
 message LeaderboardEntry {
   // Public model name.
   string model = 1;
-  // Newman Score of the model.
-  double newmanScore = 2;
   // Total votes for the model.
-  uint64 votes = 3;
+  uint64 votes = 2;
+  // Newman Score of the model.
+  double newmanScore = 3;
+  double newmanCILower = 4;
+  double newmanCIUpper = 5;
+
+  double eloScore = 6;
+  double eloCILower = 7;
+  double eloCIUpper = 8;
 }
 
 // GetLeaderboardResponse contains the leaderboard of joke models.
 message GetLeaderboardResponse { repeated LeaderboardEntry entries = 1; }
+
+message RegenerateLeaderboardRequest {}
+message RegenerateLeaderboardResponse {}

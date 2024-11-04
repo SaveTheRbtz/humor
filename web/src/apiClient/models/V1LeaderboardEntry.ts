@@ -26,17 +26,47 @@ export interface V1LeaderboardEntry {
      */
     model?: string;
     /**
+     * Total votes for the model.
+     * @type {string}
+     * @memberof V1LeaderboardEntry
+     */
+    votes?: string;
+    /**
      * Newman Score of the model.
      * @type {number}
      * @memberof V1LeaderboardEntry
      */
     newmanScore?: number;
     /**
-     * Total votes for the model.
-     * @type {string}
+     * 
+     * @type {number}
      * @memberof V1LeaderboardEntry
      */
-    votes?: string;
+    newmanCILower?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof V1LeaderboardEntry
+     */
+    newmanCIUpper?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof V1LeaderboardEntry
+     */
+    eloScore?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof V1LeaderboardEntry
+     */
+    eloCILower?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof V1LeaderboardEntry
+     */
+    eloCIUpper?: number;
 }
 
 /**
@@ -57,8 +87,13 @@ export function V1LeaderboardEntryFromJSONTyped(json: any, ignoreDiscriminator: 
     return {
         
         'model': json['model'] == null ? undefined : json['model'],
-        'newmanScore': json['newmanScore'] == null ? undefined : json['newmanScore'],
         'votes': json['votes'] == null ? undefined : json['votes'],
+        'newmanScore': json['newmanScore'] == null ? undefined : json['newmanScore'],
+        'newmanCILower': json['newmanCILower'] == null ? undefined : json['newmanCILower'],
+        'newmanCIUpper': json['newmanCIUpper'] == null ? undefined : json['newmanCIUpper'],
+        'eloScore': json['eloScore'] == null ? undefined : json['eloScore'],
+        'eloCILower': json['eloCILower'] == null ? undefined : json['eloCILower'],
+        'eloCIUpper': json['eloCIUpper'] == null ? undefined : json['eloCIUpper'],
     };
 }
 
@@ -69,8 +104,13 @@ export function V1LeaderboardEntryToJSON(value?: V1LeaderboardEntry | null): any
     return {
         
         'model': value['model'],
-        'newmanScore': value['newmanScore'],
         'votes': value['votes'],
+        'newmanScore': value['newmanScore'],
+        'newmanCILower': value['newmanCILower'],
+        'newmanCIUpper': value['newmanCIUpper'],
+        'eloScore': value['eloScore'],
+        'eloCILower': value['eloCILower'],
+        'eloCIUpper': value['eloCIUpper'],
     };
 }
 

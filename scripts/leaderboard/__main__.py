@@ -1,8 +1,8 @@
+#!/usr/bin/env python
+
 import datetime
 import logging
-import os
 import random
-import time
 from collections import defaultdict
 from dataclasses import asdict, dataclass
 from enum import Enum
@@ -244,22 +244,16 @@ def run_once(firestore_client: firestore.Client) -> None:
     time_threshold = datetime.datetime.now(tz=datetime.timezone.utc) - datetime.timedelta(hours=1)
     expired_docs = (
         firestore_client.collection("choices")
-        .where(filter=firestore.FieldFilter("winner", "==", value=None))
-        .where(filter=firestore.FieldFilter("created_at", "<", time_threshold))
+        .where("winner", "==", value=None)
         .stream()
     )
     with firestore_client.batch() as batch:
         for doc in expired_docs:
+            if doc.get("created_at") > time_threshold:
+                continue
             batch.delete(doc.reference)
 
 
-while True:
-    try:
-        logger.info("Running leaderboard update")
-        run_once(
-            firestore_client=firestore.Client("humor-arena"),
-        )
-    except Exception as e:
-        logger.error(f"Error: {e}")
-    finally:
-        time.sleep(600)
+run_once(
+    firestore_client=firestore.Client("humor-arena"),
+)
