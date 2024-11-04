@@ -105,8 +105,13 @@ def run_once(firestore_client: firestore.Client) -> None:
         choice_data = doc.to_dict()
         if choice_data is None:
             continue
-        winner = choice_data.get("winner")
-        if winner is None:
+        winner = choice_data.get("winner", WinnerEnum.UNSPECIFIED.value)
+        if winner is None or winner not in {
+            WinnerEnum.LEFT.value,
+            WinnerEnum.RIGHT.value,
+            WinnerEnum.BOTH.value,
+            WinnerEnum.NONE.value,
+        }:
             continue
         choices.append(choice_data)
 
@@ -123,26 +128,13 @@ def run_once(firestore_client: firestore.Client) -> None:
 
     model_votes: defaultdict[str, int] = defaultdict(int)
     for choice in choices:
-        joke_ids: list[str | None] = []
-        match WinnerEnum(choice.get("winner")):
-            case WinnerEnum.LEFT:
-                joke_ids = [choice.get("left_joke_id")]
-            case WinnerEnum.RIGHT:
-                joke_ids = [choice.get("right_joke_id")]
-            case WinnerEnum.BOTH | WinnerEnum.NONE:
-                joke_ids = [choice.get("left_joke_id"), choice.get("right_joke_id")]
-            case _:
-                continue
-
-        for joke_id in joke_ids:
+        for joke_id in choice.get("left_joke_id"), choice.get("right_joke_id"):
             if joke_id is None:
                 continue
             model = joke_map[joke_id].get("model")
             if model is None:
                 continue
             model_votes[model] += 1
-
-    leaderboard: list[LeaderboardEntry] = []
 
     xs: list[str] = []
     ys: list[str] = []
@@ -183,19 +175,19 @@ def run_once(firestore_client: firestore.Client) -> None:
             logger.debug("Skipping same model: %s", left_model)
             continue
 
+        xs.append(left_model)
+        ys.append(right_model)
         match w:
             case WinnerEnum.LEFT:
-                xs.append(left_model)
-                ys.append(right_model)
                 outcomes.append(Winner.X)
             case WinnerEnum.RIGHT:
-                xs.append(left_model)
-                ys.append(right_model)
                 outcomes.append(Winner.Y)
             case WinnerEnum.BOTH | WinnerEnum.NONE:
-                xs.append(left_model)
-                ys.append(right_model)
                 outcomes.append(Winner.Draw)
+
+    logger.info(
+        f"Choices processed successfully: {len(xs)=}, {len(ys)=}, {len(outcomes)=}, {skip_count=}"
+    )
 
     if not xs or not ys or not outcomes:
         raise NoRatedChoices("No valid comparisons found.")
@@ -210,6 +202,7 @@ def run_once(firestore_client: firestore.Client) -> None:
     )
     logger.info(f"Bootstrap confidence intervals computed successfully: {elo_cis=}, {newman_cis=}")
 
+    leaderboard: list[LeaderboardEntry] = []
     all_models = (
         set(model_votes.keys()) | set(elo_result.scores.index) | set(newman_result.scores.index)
     )
@@ -254,7 +247,7 @@ def run_once(firestore_client: firestore.Client) -> None:
     with firestore_client.batch() as batch:
         for doc in non_voted:
             if doc.get("created_at") > time_threshold:
-              continue
+                continue
             batch.delete(doc.reference)
 
 
