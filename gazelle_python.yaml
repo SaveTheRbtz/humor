@@ -9,6 +9,8 @@ manifest:
     certifi: certifi
     charset_normalizer: charset_normalizer
     click: click
+    dateutil: python_dateutil
+    evalica: evalica
     google.api.annotations_pb2: googleapis_common_protos
     google.api.auth_pb2: googleapis_common_protos
     google.api.backend_pb2: googleapis_common_protos
@@ -93,12 +95,17 @@ manifest:
     grpc: grpcio
     grpc_status: grpcio_status
     idna: idna
+    numpy: numpy
+    pandas: pandas
     proto: proto_plus
     pyasn1: pyasn1
     pyasn1_modules: pyasn1_modules
+    pytz: pytz
     requests: requests
     rsa: rsa
+    six: six
     tqdm: tqdm
+    tzdata: tzdata
     urllib3: urllib3
   pip_repository:
     name: pip

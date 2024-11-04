@@ -89,7 +89,7 @@ func addJoke(ctx context.Context, client *firestore.Client, theme string, text s
 	joke := serverImpl.Joke{
 		ThemeID: theme,
 		Text:    text,
-		Model:   fmt.Sprintf("dad-%d", rand.Intn(2)),
+		Model:   fmt.Sprintf("dad-%d", rand.Intn(3)),
 		Random:  rnd,
 	}
 	_, _, err := client.Collection("jokes").Add(ctx, joke)

@@ -1,4 +1,6 @@
 click
+evalica
 google-cloud-firestore
+numpy
 requests
 tqdm

@@ -13,6 +13,15 @@ local_resource(
 )
 
 local_resource(
+    'leaderboard',
+    serve_cmd='bazel run //scripts/leaderboard:leaderboard_bin',
+    serve_dir='web',
+    serve_env={'FIRESTORE_EMULATOR_HOST': 'localhost:8081'},
+    deps=['scripts/leaderboard/'],
+    resource_deps=['populate_database'],
+)
+
+local_resource(
     'web',
     serve_cmd='npm install && npm start',
     serve_dir='web',
