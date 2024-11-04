@@ -65,7 +65,7 @@ const Leaderboard: React.FC = () => {
                  &#9432;
                 {tooltipVisible && (
                   <span className="tooltiptext">
-                    Newman Score
+                    <div>Newman Score:</div>
                     <a href="https://arxiv.org/abs/2207.00076" target="_blank" rel="noopener noreferrer">
                       Efficient computation of rankings from pairwise comparisons
                     </a>
