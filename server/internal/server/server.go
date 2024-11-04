@@ -129,6 +129,7 @@ func (s *Server) GetChoices(
 	)
 
 	id := uuid.New().String()
+	noWinner := choicesv1.Winner_UNSPECIFIED
 	choice := Choice{
 		SessionID: req.SessionId,
 
@@ -136,6 +137,8 @@ func (s *Server) GetChoices(
 		LeftJokeID:  leftJokeDoc.Ref.ID,
 		RightJokeID: rightJokeDoc.Ref.ID,
 		CreatedAt:   time.Now(),
+
+		Winner: &noWinner,
 	}
 
 	_, err = s.firestoreClient.Collection("choices").Doc(id).Set(ctx, choice)

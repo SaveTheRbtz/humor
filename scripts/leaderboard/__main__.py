@@ -7,10 +7,12 @@ from collections import defaultdict
 from dataclasses import asdict, dataclass
 from enum import Enum
 from typing import Any
+from google.cloud.firestore_v1 import FieldFilter
 
 from evalica import Winner, elo, newman
 from google.cloud import firestore
 
+# TODO(rbtz): switch to info.
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
@@ -156,7 +158,9 @@ def run_once(firestore_client: firestore.Client) -> None:
             skip_count += 1
             continue
         if w not in {WinnerEnum.LEFT, WinnerEnum.RIGHT, WinnerEnum.BOTH, WinnerEnum.NONE}:
-            logger.debug("Skipping invalid winner: %d", w)
+            if w == WinnerEnum.UNSPECIFIED:
+                continue
+            logger.debug("Skipping invalid winner: %d", w.value)
             skip_count += 1
             continue
 
@@ -242,15 +246,15 @@ def run_once(firestore_client: firestore.Client) -> None:
 
     # remove expired choices
     time_threshold = datetime.datetime.now(tz=datetime.timezone.utc) - datetime.timedelta(hours=1)
-    expired_docs = (
+    non_voted = (
         firestore_client.collection("choices")
-        .where("winner", "==", value=None)
+        .where(filter=FieldFilter("winner", "==", WinnerEnum.UNSPECIFIED.value))
         .stream()
     )
     with firestore_client.batch() as batch:
-        for doc in expired_docs:
+        for doc in non_voted:
             if doc.get("created_at") > time_threshold:
-                continue
+              continue
             batch.delete(doc.reference)
 
 
