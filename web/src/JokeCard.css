@@ -21,3 +21,10 @@
     border: none;
     cursor: pointer;
 }
+
+@media (max-width: 600px) {
+    .joke-card {
+        margin: 0 0%;
+        width: 50%;
+    }
+}
