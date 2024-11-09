@@ -6,7 +6,7 @@ import random
 from collections import defaultdict
 from dataclasses import asdict, dataclass
 from enum import Enum
-from typing import Any
+from typing import Any, Callable, Protocol
 
 from evalica import Winner, elo, newman
 from google.cloud import firestore
@@ -41,23 +41,40 @@ class LeaderboardEntry:
     newman_ci_upper: float
 
 
+class RatingResultProtocol(Protocol):
+    @property
+    def scores(self) -> dict[str, float]: ...
+
+
+RatingSystemProtocol = Callable[[list[str], list[str], list[Winner]], RatingResultProtocol]
+
+
+@dataclass
+class ConfidenceInterval:
+    lower: float
+    upper: float
+
+
 def bootstrap_confidence_intervals(
     xs: list[str],
     ys: list[str],
     outcomes: list[Winner],
+    rating_systems: dict[str, RatingSystemProtocol],
     n_bootstrap: int = 1000,
     confidence: float = 0.95,
-) -> tuple[dict, dict]:
+) -> dict[str, dict[str, tuple[float, float]]]:
     """
-    Perform bootstrap sampling of (xs, ys, outcomes) to estimate confidence intervals.
-    Returns dictionaries for ELO and Newman, keyed by model, with tuples for (lower, upper) intervals.
+    Perform bootstrap sampling of (xs, ys, outcomes) for multiple rating systems to estimate confidence intervals.
+    Returns a dictionary keyed by rating system name, whose values are dictionaries keyed by model with
+    tuples for (lower, upper) confidence intervals.
     """
     n = len(xs)
     if n != len(ys) or n != len(outcomes):
         raise ValueError("All lists (xs, ys, outcomes) must have the same length.")
+    if not rating_systems:
+        raise ValueError("At least one rating system must be provided.")
 
-    elo_distributions = defaultdict(list)
-    newman_distributions = defaultdict(list)
+    distributions = {system_name: defaultdict(list) for system_name in rating_systems}
 
     for _ in range(n_bootstrap):
         indices = [random.randint(0, n - 1) for _ in range(n)]
@@ -65,32 +82,40 @@ def bootstrap_confidence_intervals(
         sample_ys = [ys[i] for i in indices]
         sample_outcomes = [outcomes[i] for i in indices]
 
-        elo_result_sample = elo(sample_xs, sample_ys, sample_outcomes)
-        newman_result_sample = newman(
-            sample_xs, sample_ys, sample_outcomes, tolerance=1e-6, limit=1000
-        )
+        for system_name, rating_system in rating_systems.items():
+            result = rating_system(sample_xs, sample_ys, sample_outcomes)
+            for model_name, score in result.scores.items():
+                distributions[system_name][model_name].append(score)
 
-        for model_name, score in elo_result_sample.scores.items():
-            elo_distributions[model_name].append(score)
-        for model_name, score in newman_result_sample.scores.items():
-            newman_distributions[model_name].append(score)
+    confidence_intervals = {}
+    for system_name, system_distributions in distributions.items():
+        system_conf_intervals = {}
+        for model_name, dist in system_distributions.items():
+            dist_sorted = sorted(dist)
+            dist_length = len(dist_sorted)
+            if dist_length == 0:
+                system_conf_intervals[model_name] = (0.0, 0.0)
+                continue
 
-    elo_confidence_intervals = {}
-    newman_confidence_intervals = {}
-    for model_name, dist in elo_distributions.items():
-        dist_sorted = sorted(dist)
-        lower_index = int((1.0 - confidence) / 2 * n_bootstrap)
-        upper_index = int((1.0 + confidence) / 2 * n_bootstrap) - 1
-        elo_confidence_intervals[model_name] = (dist_sorted[lower_index], dist_sorted[upper_index])
-    for model_name, dist in newman_distributions.items():
-        dist_sorted = sorted(dist)
-        lower_index = int((1.0 - confidence) / 2 * n_bootstrap)
-        upper_index = int((1.0 + confidence) / 2 * n_bootstrap) - 1
-        newman_confidence_intervals[model_name] = (
-            dist_sorted[lower_index],
-            dist_sorted[upper_index],
-        )
-    return elo_confidence_intervals, newman_confidence_intervals
+            lower_index = int((1.0 - confidence) / 2 * dist_length)
+            upper_index = int((1.0 + confidence) / 2 * dist_length) - 1
+
+            if lower_index < 0:
+                lower_index = 0
+            if upper_index < 0:
+                upper_index = 0
+            if lower_index >= dist_length:
+                lower_index = dist_length - 1
+            if upper_index >= dist_length:
+                upper_index = dist_length - 1
+
+            system_conf_intervals[model_name] = (
+                dist_sorted[lower_index],
+                dist_sorted[upper_index],
+            )
+        confidence_intervals[system_name] = system_conf_intervals
+
+    return confidence_intervals
 
 
 def run_once(firestore_client: firestore.Client) -> None:
@@ -128,7 +153,7 @@ def run_once(firestore_client: firestore.Client) -> None:
 
     model_votes: defaultdict[str, int] = defaultdict(int)
     for choice in choices:
-        for joke_id in choice.get("left_joke_id"), choice.get("right_joke_id"):
+        for joke_id in (choice.get("left_joke_id"), choice.get("right_joke_id")):
             if joke_id is None:
                 continue
             model = joke_map[joke_id].get("model")
@@ -188,43 +213,61 @@ def run_once(firestore_client: firestore.Client) -> None:
     logger.info(
         f"Choices processed successfully: {len(xs)=}, {len(ys)=}, {len(outcomes)=}, {skip_count=}"
     )
+    logger.info(f"xs: {xs}")
+    logger.info(f"ys: {ys}")
+    logger.info(f"outcomes: {outcomes}")
 
     if not xs or not ys or not outcomes:
         raise NoRatedChoices("No valid comparisons found.")
 
-    elo_result = elo(xs, ys, outcomes)
-    newman_result = newman(xs, ys, outcomes, tolerance=1e-6, limit=1000)
+    rating_systems_dict = {
+        "elo": elo,
+        "newman": lambda x_list, y_list, out_list: newman(
+            x_list, y_list, out_list, tolerance=1e-6, limit=1000
+        ),
+    }
 
     n_bootstrap_samples = 1000
     confidence_level = 0.95
-    elo_cis, newman_cis = bootstrap_confidence_intervals(
-        xs, ys, outcomes, n_bootstrap=n_bootstrap_samples, confidence=confidence_level
+    confidence_intervals = bootstrap_confidence_intervals(
+        xs,
+        ys,
+        outcomes,
+        rating_systems=rating_systems_dict,
+        n_bootstrap=n_bootstrap_samples,
+        confidence=confidence_level,
     )
-    logger.info(f"Bootstrap confidence intervals computed successfully: {elo_cis=}, {newman_cis=}")
+    logger.info(f"Bootstrap confidence intervals computed successfully: {confidence_intervals=}")
+
+    elo_result = elo(xs, ys, outcomes)
+    newman_result = newman(xs, ys, outcomes, tolerance=1e-6, limit=1000)
 
     leaderboard: list[LeaderboardEntry] = []
-    all_models = (
-        set(model_votes.keys()) | set(elo_result.scores.index) | set(newman_result.scores.index)
-    )
-    for model_name in all_models:
+    for model_name in model_votes.keys():
         votes_count = model_votes.get(model_name, 0)
         elo_val = elo_result.scores.get(model_name, 0.0)
-        elo_ci = elo_cis.get(model_name, (elo_val, elo_val))
+        elo_ci = confidence_intervals.get("elo", {}).get(model_name, (elo_val, elo_val))
         newman_val = newman_result.scores.get(model_name, 0.0)
-        newman_ci = newman_cis.get(model_name, (newman_val, newman_val))
+        newman_ci = confidence_intervals.get("newman", {}).get(model_name, (newman_val, newman_val))
         logger.info(
             f"Leaderboard entry: {model_name=}, {votes_count=}, {elo_val=}, {elo_ci=}, {newman_val=}, {newman_ci=}"
         )
+
+        elo_ci_lower_diff = float(elo_val - elo_ci[0])  # difference to lower CI boundary
+        elo_ci_upper_diff = float(elo_ci[1] - elo_val)  # difference to upper CI boundary
+        newman_ci_lower_diff = float(newman_val - newman_ci[0])
+        newman_ci_upper_diff = float(newman_ci[1] - newman_val)
+
         leaderboard.append(
             LeaderboardEntry(
                 model=model_name,
                 votes=votes_count,
                 elo_score=float(elo_val),
-                elo_ci_lower=float(elo_val - elo_ci[0]),
-                elo_ci_upper=float(elo_ci[1] - elo_val),
+                elo_ci_lower=elo_ci_lower_diff,
+                elo_ci_upper=elo_ci_upper_diff,
                 newman_score=float(newman_val),
-                newman_ci_lower=float(newman_val - newman_ci[0]),
-                newman_ci_upper=float(newman_ci[1] - newman_val),
+                newman_ci_lower=newman_ci_lower_diff,
+                newman_ci_upper=newman_ci_upper_diff,
             )
         )
     logger.info(f"Leaderboard computed successfully: {leaderboard=}")
