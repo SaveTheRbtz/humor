@@ -12,8 +12,7 @@ from evalica import Winner, elo, newman
 from google.cloud import firestore
 from google.cloud.firestore_v1 import FieldFilter
 
-# TODO(rbtz): switch to info.
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
@@ -156,7 +155,10 @@ def run_once(firestore_client: firestore.Client) -> None:
         for joke_id in (choice.get("left_joke_id"), choice.get("right_joke_id")):
             if joke_id is None:
                 continue
-            model = joke_map[joke_id].get("model")
+            joke = joke_map.get(joke_id)
+            if joke is None:
+                continue
+            model = joke.get("model")
             if model is None:
                 continue
             model_votes[model] += 1
@@ -185,7 +187,7 @@ def run_once(firestore_client: firestore.Client) -> None:
         right_joke = joke_map.get(right_joke_id)
 
         if left_joke is None or right_joke is None:
-            logger.debug("Skipping invalid joke: %s", left_joke_id, right_joke_id)
+            logger.debug("Skipping invalid joke: %s, %s", left_joke_id, right_joke_id)
             skip_count += 1
             continue
 
