@@ -7,10 +7,10 @@ from collections import defaultdict
 from dataclasses import asdict, dataclass
 from enum import Enum
 from typing import Any
-from google.cloud.firestore_v1 import FieldFilter
 
 from evalica import Winner, elo, newman
 from google.cloud import firestore
+from google.cloud.firestore_v1 import FieldFilter
 
 # TODO(rbtz): switch to info.
 logging.basicConfig(level=logging.DEBUG)

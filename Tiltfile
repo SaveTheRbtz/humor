@@ -17,7 +17,6 @@ local_resource(
     cmd='bazel run //scripts/leaderboard:leaderboard_bin',
     env={'FIRESTORE_EMULATOR_HOST': 'localhost:8081'},
     deps=['scripts/leaderboard/'],
-    resource_deps=['populate_database'],
 )
 
 local_resource(
@@ -26,7 +25,6 @@ local_resource(
     serve_dir='web',
     serve_env={'REACT_APP_API_BASE_URL': 'http://localhost:8080'},
     deps=['web/src/'],
-    resource_deps=['populate_database'],
 )
 
 local_resource(
