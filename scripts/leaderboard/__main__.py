@@ -209,14 +209,9 @@ def run_once(firestore_client: firestore.Client) -> None:
                 outcomes.append(Winner.Y)
             case WinnerEnum.BOTH | WinnerEnum.NONE:
                 outcomes.append(Winner.Draw)
-
     logger.info(
         f"Choices processed successfully: {len(xs)=}, {len(ys)=}, {len(outcomes)=}, {skip_count=}"
     )
-    logger.info(f"xs: {xs}")
-    logger.info(f"ys: {ys}")
-    logger.info(f"outcomes: {outcomes}")
-
     if not xs or not ys or not outcomes:
         raise NoRatedChoices("No valid comparisons found.")
 
