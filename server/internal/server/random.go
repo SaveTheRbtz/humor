@@ -8,8 +8,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	"math/rand/v2"
-
 	"cloud.google.com/go/firestore"
 )
 
@@ -38,7 +36,7 @@ func NewRandomDocumentGetter[T any](
 
 	return &randomDocumentGetterImpl[T]{
 		firestoreClient: firestoreClient,
-		random:          rand.New(insecureRand.NewChaCha8(seedBytes)),
+		random:          insecureRand.New(insecureRand.NewChaCha8(seedBytes)),
 		query:           query,
 		cacheTime:       cacheTime,
 	}, nil
