@@ -105,6 +105,10 @@ func (s *Server) GetChoices(
 		s.firestoreClient.Collection("jokes").Query.Where("theme_id", "==", themeDoc.Ref.ID),
 		time.Duration(0),
 	)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Failed to create random joke getter: %v", err)
+	}
+
 	jokes, jokeDocs, err := jokeGetter.GetRandomDocuments(ctx, 2)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to get random jokes: %v", err)
