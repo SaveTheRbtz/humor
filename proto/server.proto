@@ -28,12 +28,6 @@ service Arena {
       get : "/v1/leaderboard"
     };
   }
-  // Regenerate leaderboard.
-  rpc RegenerateLeadeboard(RegenerateLeaderboardRequest) returns (RegenerateLeaderboardResponse) {
-    option (google.api.http) = {
-      post : "/v1/regenerateLeaderboard"
-    };
-  }
 }
 
 message GetChoicesRequest {
@@ -104,6 +98,3 @@ message LeaderboardEntry {
 
 // GetLeaderboardResponse contains the leaderboard of joke models.
 message GetLeaderboardResponse { repeated LeaderboardEntry entries = 1; }
-
-message RegenerateLeaderboardRequest {}
-message RegenerateLeaderboardResponse {}

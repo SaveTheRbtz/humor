@@ -110,29 +110,6 @@
           "Arena"
         ]
       }
-    },
-    "/v1/regenerateLeaderboard": {
-      "post": {
-        "summary": "Regenerate leaderboard.",
-        "operationId": "Arena_RegenerateLeadeboard",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1RegenerateLeaderboardResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "tags": [
-          "Arena"
-        ]
-      }
     }
   },
   "definitions": {
@@ -255,9 +232,6 @@
     "v1RateChoicesResponse": {
       "type": "object",
       "description": "TODO(rbtz): return jokes generation parameters: model, policy, etc."
-    },
-    "v1RegenerateLeaderboardResponse": {
-      "type": "object"
     },
     "v1Winner": {
       "type": "string",

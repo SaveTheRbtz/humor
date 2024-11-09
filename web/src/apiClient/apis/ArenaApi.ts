@@ -144,30 +144,4 @@ export class ArenaApi extends runtime.BaseAPI {
         return await response.value();
     }
 
-    /**
-     * Regenerate leaderboard.
-     */
-    async arenaRegenerateLeadeboardRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<object>> {
-        const queryParameters: any = {};
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-        const response = await this.request({
-            path: `/v1/regenerateLeaderboard`,
-            method: 'POST',
-            headers: headerParameters,
-            query: queryParameters,
-        }, initOverrides);
-
-        return new runtime.JSONApiResponse<any>(response);
-    }
-
-    /**
-     * Regenerate leaderboard.
-     */
-    async arenaRegenerateLeadeboard(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<object> {
-        const response = await this.arenaRegenerateLeadeboardRaw(initOverrides);
-        return await response.value();
-    }
-
 }

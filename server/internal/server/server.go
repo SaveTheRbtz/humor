@@ -1,11 +1,8 @@
 package server
 
 import (
-	"bytes"
 	"context"
 	"fmt"
-	"os/exec"
-	"sync"
 
 	"go.uber.org/zap"
 
@@ -70,15 +67,11 @@ type Server struct {
 	firestoreClient *firestore.Client
 	rand            *insecureRand.Rand
 	themeGetter     *randomDocumentGetterImpl[Theme]
-
-	leaderboardUpdate    *sync.Mutex
-	leaderboardUpdateCmd string
 }
 
 func NewServer(
 	firestoreClient *firestore.Client,
 	logger *zap.Logger,
-	leaderboardUpdateCmd string,
 ) (*Server, error) {
 	randomThemeGetter, err := NewRandomDocumentGetter[Theme](
 		firestoreClient,
@@ -93,9 +86,6 @@ func NewServer(
 		logger:          logger,
 		firestoreClient: firestoreClient,
 		themeGetter:     randomThemeGetter,
-
-		leaderboardUpdate:    &sync.Mutex{},
-		leaderboardUpdateCmd: leaderboardUpdateCmd,
 	}, nil
 }
 
@@ -229,36 +219,4 @@ func (s *Server) GetLeaderboard(
 	return &choicesv1.GetLeaderboardResponse{
 		Entries: entries,
 	}, nil
-}
-
-func (s *Server) RegenerateLeadeboard(
-	ctx context.Context,
-	req *choicesv1.RegenerateLeaderboardRequest,
-) (*choicesv1.RegenerateLeaderboardResponse, error) {
-	if s.leaderboardUpdateCmd == "" {
-		return nil, status.Error(codes.Unimplemented, "Leaderboard update is not configured")
-	}
-	s.logger.Info("RegenerateLeaderboard", zap.String("cmd", s.leaderboardUpdateCmd))
-
-	s.leaderboardUpdate.Lock()
-	defer s.leaderboardUpdate.Unlock()
-
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
-	defer cancel()
-
-	var stderr bytes.Buffer
-	cmd := exec.CommandContext(ctx, "sh", "-c", s.leaderboardUpdateCmd)
-	cmd.Stderr = &stderr
-	err := cmd.Run()
-
-	if ctx.Err() == context.DeadlineExceeded {
-		_ = cmd.Process.Kill()
-		return nil, status.Error(codes.DeadlineExceeded, "Leaderboard update timed out")
-	}
-	if err != nil {
-		s.logger.Error("Failed to regenerate leaderboard", zap.Error(err))
-		return nil, status.Errorf(codes.Internal, "Failed to regenerate leaderboard: %v: %s", err, stderr.String())
-	}
-
-	return &choicesv1.RegenerateLeaderboardResponse{}, nil
 }

@@ -19,10 +19,9 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Arena_GetChoices_FullMethodName           = "/choices.v1.Arena/GetChoices"
-	Arena_RateChoices_FullMethodName          = "/choices.v1.Arena/RateChoices"
-	Arena_GetLeaderboard_FullMethodName       = "/choices.v1.Arena/GetLeaderboard"
-	Arena_RegenerateLeadeboard_FullMethodName = "/choices.v1.Arena/RegenerateLeadeboard"
+	Arena_GetChoices_FullMethodName     = "/choices.v1.Arena/GetChoices"
+	Arena_RateChoices_FullMethodName    = "/choices.v1.Arena/RateChoices"
+	Arena_GetLeaderboard_FullMethodName = "/choices.v1.Arena/GetLeaderboard"
 )
 
 // ArenaClient is the client API for Arena service.
@@ -37,8 +36,6 @@ type ArenaClient interface {
 	RateChoices(ctx context.Context, in *RateChoicesRequest, opts ...grpc.CallOption) (*RateChoicesResponse, error)
 	// Gets the leaderboard of joke models.
 	GetLeaderboard(ctx context.Context, in *GetLeaderboardRequest, opts ...grpc.CallOption) (*GetLeaderboardResponse, error)
-	// Regenerate leaderboard.
-	RegenerateLeadeboard(ctx context.Context, in *RegenerateLeaderboardRequest, opts ...grpc.CallOption) (*RegenerateLeaderboardResponse, error)
 }
 
 type arenaClient struct {
@@ -79,16 +76,6 @@ func (c *arenaClient) GetLeaderboard(ctx context.Context, in *GetLeaderboardRequ
 	return out, nil
 }
 
-func (c *arenaClient) RegenerateLeadeboard(ctx context.Context, in *RegenerateLeaderboardRequest, opts ...grpc.CallOption) (*RegenerateLeaderboardResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(RegenerateLeaderboardResponse)
-	err := c.cc.Invoke(ctx, Arena_RegenerateLeadeboard_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // ArenaServer is the server API for Arena service.
 // All implementations must embed UnimplementedArenaServer
 // for forward compatibility.
@@ -101,8 +88,6 @@ type ArenaServer interface {
 	RateChoices(context.Context, *RateChoicesRequest) (*RateChoicesResponse, error)
 	// Gets the leaderboard of joke models.
 	GetLeaderboard(context.Context, *GetLeaderboardRequest) (*GetLeaderboardResponse, error)
-	// Regenerate leaderboard.
-	RegenerateLeadeboard(context.Context, *RegenerateLeaderboardRequest) (*RegenerateLeaderboardResponse, error)
 	mustEmbedUnimplementedArenaServer()
 }
 
@@ -121,9 +106,6 @@ func (UnimplementedArenaServer) RateChoices(context.Context, *RateChoicesRequest
 }
 func (UnimplementedArenaServer) GetLeaderboard(context.Context, *GetLeaderboardRequest) (*GetLeaderboardResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetLeaderboard not implemented")
-}
-func (UnimplementedArenaServer) RegenerateLeadeboard(context.Context, *RegenerateLeaderboardRequest) (*RegenerateLeaderboardResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RegenerateLeadeboard not implemented")
 }
 func (UnimplementedArenaServer) mustEmbedUnimplementedArenaServer() {}
 func (UnimplementedArenaServer) testEmbeddedByValue()               {}
@@ -200,24 +182,6 @@ func _Arena_GetLeaderboard_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Arena_RegenerateLeadeboard_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RegenerateLeaderboardRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ArenaServer).RegenerateLeadeboard(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Arena_RegenerateLeadeboard_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ArenaServer).RegenerateLeadeboard(ctx, req.(*RegenerateLeaderboardRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // Arena_ServiceDesc is the grpc.ServiceDesc for Arena service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -236,10 +200,6 @@ var Arena_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetLeaderboard",
 			Handler:    _Arena_GetLeaderboard_Handler,
-		},
-		{
-			MethodName: "RegenerateLeadeboard",
-			Handler:    _Arena_RegenerateLeadeboard_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

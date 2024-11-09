@@ -21,12 +21,16 @@ generate: buf-gen gen-api-client
 	@echo "Code generation completed successfully."
 
 build:
-	@echo "Building server Docker image..."
-	docker build -f Dockerfile --platform linux/amd64 -t gcr.io/humor-arena/server:latest --target app .
+	@echo "Building server Docker images..."
+	docker build -f arena.Dockerfile --platform linux/amd64 -t gcr.io/humor-arena/server:latest --target app .
+	docker build -f leaderboard.Dockerfile --platform linux/amd64 -t gcr.io/humor-arena/leaderboard:latest --target app .
 
-deploy: build
+push:
 	@echo "Pushing Docker images to Google Container Registry..."
 	docker push gcr.io/humor-arena/server:latest
+	docker push gcr.io/humor-arena/leaderboard:latest
+
+deploy: build push
 	@echo "Deploying to Google Cloud Run..."
 	gcloud run deploy humor-arena \
 		--image gcr.io/humor-arena/server:latest \
@@ -34,3 +38,10 @@ deploy: build
 		--region us-central1 \
 		--allow-unauthenticated \
 		--service-account cloud-run-firestore-sa@humor-arena.iam.gserviceaccount.com
+	gcloud run jobs update leaderboard \
+		--image gcr.io/humor-arena/leaderboard:latest \
+		--task-timeout 10m \
+		--region us-central1 \
+		--service-account cloud-run-firestore-sa@humor-arena.iam.gserviceaccount.com
+	gcloud run jobs execute leaderboard --region us-central1
+	@echo "Deployment completed successfully."

@@ -78,7 +78,8 @@ func main() {
 		grpc_health_v1.RegisterHealthServer(grpcServer, healthServer)
 
 		choicesServer, err := serverImpl.NewServer(
-			firestoreClient, logger, "./scripts/leaderboard/__main__.py",
+			firestoreClient,
+			logger,
 		)
 		if err != nil {
 			logger.Fatal("Failed to create server", zap.Error(err))
