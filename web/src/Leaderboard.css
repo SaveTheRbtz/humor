@@ -74,9 +74,19 @@
     border-color: #ccc transparent transparent transparent;
 }
 
+.ci {
+    white-space: nowrap;
+}
+
 @media screen and (max-width: 600px) {
+    .leaderboard-container {
+        padding: 4px;
+    }
     .leaderboard-table th,
     .leaderboard-table td {
-        padding: 8px;
+        padding: 4px;
+    }
+    .ci {
+      display: block;
     }
 }

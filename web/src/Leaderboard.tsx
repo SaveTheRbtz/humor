@@ -83,8 +83,18 @@ const Leaderboard: React.FC = () => {
                 <td>{index + 1}</td>
                 <td>{entry.model}</td>
                 <td>{entry.votes}</td>
-                <td>{entry.eloScore!.toFixed(0)} +{entry.eloCIUpper!.toFixed(0)}/-{entry.eloCILower!.toFixed(0)}</td>
-                <td>{entry.newmanScore!.toFixed(2)} +{entry.newmanCIUpper!.toFixed(2)}/-{entry.newmanCILower!.toFixed(2)}</td>
+                <td>
+                  {entry.eloScore!.toFixed(0)}
+                  <span className="ci">
+                    &nbsp;+{entry.eloCIUpper!.toFixed(0)}/-{entry.eloCILower!.toFixed(0)}
+                  </span>
+                </td>
+                <td>
+                  {entry.newmanScore!.toFixed(2)}
+                  <span className="ci">
+                    &nbsp;+{entry.newmanCIUpper!.toFixed(2)}/-{entry.newmanCILower!.toFixed(2)}
+                  </span>
+                </td>
               </tr>
             ))}
         </tbody>
