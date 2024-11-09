@@ -56,15 +56,14 @@ func (r *randomDocumentGetterImpl[T]) GetRandomDocuments(
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to get documents: %w", err)
 		}
-		if r.cacheTime > 0 {
+		if r.cacheTime > 0 && docs != nil {
 			r.cache.Store(&documentCache{
 				response:  docs,
 				timestamp: time.Now(),
 			})
 		}
 	}
-
-	if len(docs) == 0 {
+	if docs == nil || len(docs) == 0 {
 		return nil, nil, fmt.Errorf("no documents found")
 	}
 	if len(docs) < limit {
