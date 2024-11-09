@@ -50,7 +50,7 @@ func (r *randomDocumentGetterImpl[T]) GetRandomDocuments(
 	var err error
 
 	if cached := r.cache.Load(); cached != nil && cached.timestamp.Add(r.cacheTime).After(time.Now()) {
-		docs = cached.response[:]
+		docs = append([]*firestore.DocumentSnapshot(nil), cached.response...)
 	} else {
 		docs, err = r.query.Documents(ctx).GetAll()
 		if err != nil {
