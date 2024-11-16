@@ -68,7 +68,7 @@ func main() {
 
 	for _, joke := range jokes {
 		rnd := rand.Float64()
-		err := addJoke(ctx, client, themeToID[joke.Theme], joke.Text, rnd)
+		err := addJoke(ctx, client, themeToID[joke.Theme], joke.Theme, joke.Text, rnd)
 		if err != nil {
 			log.Fatalf("Failed to add joke: %v", err)
 		}
@@ -79,7 +79,12 @@ func main() {
 	fmt.Println("Data population completed.")
 }
 
-func addTheme(ctx context.Context, client *firestore.Client, themeName string, rnd float64) (*firestore.DocumentRef, error) {
+func addTheme(
+	ctx context.Context,
+	client *firestore.Client,
+	themeName string,
+	rnd float64,
+) (*firestore.DocumentRef, error) {
 	theme := serverImpl.Theme{
 		Text:   themeName,
 		Random: rnd,
@@ -88,9 +93,16 @@ func addTheme(ctx context.Context, client *firestore.Client, themeName string, r
 	return docRef, err
 }
 
-func addJoke(ctx context.Context, client *firestore.Client, theme string, text string, rnd float64) error {
+func addJoke(ctx context.Context,
+	client *firestore.Client,
+	themeID string,
+	themeName string,
+	text string,
+	rnd float64,
+) error {
 	joke := serverImpl.Joke{
-		ThemeID: theme,
+		ThemeID: themeID,
+		Theme:   themeName,
 		Text:    text,
 		Model:   fmt.Sprintf("dad-%d", rand.Intn(3)),
 		Random:  rnd,

@@ -42,6 +42,7 @@ type Theme struct {
 }
 
 type Joke struct {
+	Theme   string  `firestore:"theme"`
 	ThemeID string  `firestore:"theme_id"`
 	Text    string  `firestore:"text"`
 	Random  float64 `firestore:"random"`
@@ -102,7 +103,7 @@ func (s *Server) GetChoices(
 
 	jokeGetter, err := NewRandomDocumentGetter[Joke](
 		s.firestoreClient,
-		s.firestoreClient.Collection("jokes").Query.Where("theme_id", "==", themeDoc.Ref.ID),
+		s.firestoreClient.Collection("jokes").Query.Where("theme", "==", theme.Text),
 		time.Duration(0),
 	)
 	if err != nil {
