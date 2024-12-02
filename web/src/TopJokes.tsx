@@ -45,6 +45,12 @@ const TopJokes: React.FC = () => {
   return (
     <div className="top-jokes-container">
       <h1>Top Jokes</h1>
+      <div className="about-container">
+        <p>
+          Since our goal is to automate machine understanding of humor, here we demonstrate fully automatic sorting of 2000+ automatically generated jokes, publishing the top 50 according to machine scores.
+          This is an early beta version and we are working on improving it, with code and algorithms to be published soon. Enjoy!
+        </p>
+      </div>
       <table className="top-jokes-table">
         <thead>
           <tr>

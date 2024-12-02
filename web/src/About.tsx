@@ -18,8 +18,12 @@ function About() {
           {' '} to facilitate future research.</p>
       </p>
       <p><strong>Now we want to go further:</strong> is there a way to improve reasoning schema? are some models more potent in terms of humor generation than others? To investigate it, we made this Humor Arena to ask people to {' '}
-          <a href="https://humor.ph34r.me/arena" target="_blank" rel="noopener noreferrer">help us with blind side-by-side labeling</a>
+          <a href="/arena" target="_blank" rel="noopener noreferrer">help us with blind side-by-side labeling</a>
           {' '}.
+      </p>
+      <p>
+        Since our goal is to automate machine understanding of humor, here we demonstrate fully automatic sorting of 2000+ automatically generated jokes, <a href="/top-jokes">publishing the top 50 according to machine scores</a>.
+        This is an early beta version and we are working on improving it, with code and algorithms to be published soon. Enjoy!
       </p>
       <p>
       <h3>Reference</h3>

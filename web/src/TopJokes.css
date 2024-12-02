@@ -45,8 +45,42 @@
     .top-jokes-container {
         padding: 4px;
     }
+
     .top-jokes-table th,
     .top-jokes-table td {
         padding: 4px;
     }
+}
+
+.about-container {
+    max-width: 90%;
+    margin: 0 auto;
+    padding: 2rem;
+    font-family: Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    color: #333;
+}
+
+.about-container p {
+    font-size: 1em;
+    margin-bottom: 1em;
+    text-align: justify;
+}
+
+.about-container ul {
+    margin-left: 1.5em;
+    margin-bottom: 1em;
+}
+
+.about-container li {
+    margin-bottom: 0.5em;
+}
+
+.about-container a {
+    color: #3498db;
+    text-decoration: none;
+}
+
+.about-container a:hover {
+    text-decoration: underline;
 }
