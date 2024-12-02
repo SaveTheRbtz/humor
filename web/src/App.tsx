@@ -6,6 +6,7 @@ import Header from './Header';
 import Footer from './Footer';
 import About from './About';
 import Leaderboard from './Leaderboard';
+import TopJokes from './TopJokes';
 import Arena from './Arena';
 
 function App() {
@@ -26,6 +27,7 @@ function App() {
           <Route path="/about" element={<About />} />
           <Route path="/arena" element={<Arena />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
+          <Route path="/top-jokes" element={<TopJokes />} />
         </Routes>
       </main>
       <Footer />

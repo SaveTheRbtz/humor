@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"go.uber.org/zap"
 
@@ -18,7 +19,15 @@ import (
 	"google.golang.org/api/iterator"
 
 	"github.com/google/uuid"
+
+	// embed
+	_ "embed"
 )
+
+// TODO(rbtz): automate rank generation and open-source policy geneeration.
+
+//go:embed "top-jokes.txt"
+var topJokesData string
 
 type leaderboardEntry struct {
 	Model         string  `firestore:"model"`
@@ -222,6 +231,27 @@ func (s *Server) GetLeaderboard(
 	}
 
 	return &choicesv1.GetLeaderboardResponse{
+		Entries: entries,
+	}, nil
+}
+
+func (s *Server) GetTopJokes(
+	ctx context.Context,
+	req *choicesv1.GetTopJokesRequest,
+) (*choicesv1.GetTopJokesResponse, error) {
+	entries := make([]*choicesv1.TopJokesEntry, 0, 10)
+	// read lines from topJokesData
+	for i, line := range strings.Split(topJokesData, "\n") {
+		if line == "" {
+			continue
+		}
+		entries = append(entries, &choicesv1.TopJokesEntry{
+			Rank: uint64(i + 1),
+			Text: line,
+		})
+	}
+
+	return &choicesv1.GetTopJokesResponse{
 		Entries: entries,
 	}, nil
 }

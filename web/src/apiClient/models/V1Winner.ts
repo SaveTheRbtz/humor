@@ -14,7 +14,7 @@
 
 
 /**
- * Enumeration of possible user choices.
+ * Winner enum of possible user choices.
  * 
  *  - UNSPECIFIED: Default unspecified value.
  *  - NONE: User didn't like either joke.

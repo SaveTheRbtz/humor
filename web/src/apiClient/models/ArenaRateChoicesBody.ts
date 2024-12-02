@@ -21,7 +21,7 @@ import {
 } from './V1Winner';
 
 /**
- * Request to rate the presented jokes.
+ * RateChoicesRequest to rate the presented jokes.
  * @export
  * @interface ArenaRateChoicesBody
  */

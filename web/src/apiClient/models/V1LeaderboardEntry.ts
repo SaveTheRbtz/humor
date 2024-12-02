@@ -50,7 +50,7 @@ export interface V1LeaderboardEntry {
      */
     newmanCIUpper?: number;
     /**
-     * 
+     * Elo Score of the model.
      * @type {number}
      * @memberof V1LeaderboardEntry
      */

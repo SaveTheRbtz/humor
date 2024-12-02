@@ -110,6 +110,29 @@
           "Arena"
         ]
       }
+    },
+    "/v1/top-jokes": {
+      "get": {
+        "summary": "Gets the top jokes.",
+        "operationId": "Arena_GetTopJokes",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetTopJokesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "Arena"
+        ]
+      }
     }
   },
   "definitions": {
@@ -125,7 +148,7 @@
           "description": "Known jokes."
         }
       },
-      "description": "Request to rate the presented jokes."
+      "description": "RateChoicesRequest to rate the presented jokes."
     },
     "protobufAny": {
       "type": "object",
@@ -174,7 +197,8 @@
           "type": "string",
           "description": "Text of the right joke."
         }
-      }
+      },
+      "description": "GetChoicesResponse is a response to the GetChoicesRequest."
     },
     "v1GetLeaderboardResponse": {
       "type": "object",
@@ -188,6 +212,19 @@
         }
       },
       "description": "GetLeaderboardResponse contains the leaderboard of joke models."
+    },
+    "v1GetTopJokesResponse": {
+      "type": "object",
+      "properties": {
+        "entries": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1TopJokesEntry"
+          }
+        }
+      },
+      "description": "GetTopJokesResponse contains the top jokes."
     },
     "v1LeaderboardEntry": {
       "type": "object",
@@ -216,7 +253,8 @@
         },
         "eloScore": {
           "type": "number",
-          "format": "double"
+          "format": "double",
+          "description": "Elo Score of the model."
         },
         "eloCILower": {
           "type": "number",
@@ -231,7 +269,22 @@
     },
     "v1RateChoicesResponse": {
       "type": "object",
-      "description": "TODO(rbtz): return jokes generation parameters: model, policy, etc."
+      "description": "RateChoicesResponse is a response to the RateChoicesRequest.\n\nTODO(rbtz): return jokes generation parameters: model, policy, etc."
+    },
+    "v1TopJokesEntry": {
+      "type": "object",
+      "properties": {
+        "rank": {
+          "type": "string",
+          "format": "uint64",
+          "description": "Rank of the joke."
+        },
+        "text": {
+          "type": "string",
+          "description": "Text of the joke.\n\nTODO(rbtz): add model name?"
+        }
+      },
+      "description": "TopJokesEntry contains the rank and text of the joke."
     },
     "v1Winner": {
       "type": "string",
@@ -243,7 +296,7 @@
         "BOTH"
       ],
       "default": "UNSPECIFIED",
-      "description": "Enumeration of possible user choices.\n\n - UNSPECIFIED: Default unspecified value.\n - NONE: User didn't like either joke.\n - LEFT: User chose the left joke.\n - RIGHT: User chose the right joke.\n - BOTH: User liked both jokes equally."
+      "description": "Winner enum of possible user choices.\n\n - UNSPECIFIED: Default unspecified value.\n - NONE: User didn't like either joke.\n - LEFT: User chose the left joke.\n - RIGHT: User chose the right joke.\n - BOTH: User liked both jokes equally."
     }
   }
 }

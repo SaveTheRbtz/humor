@@ -19,6 +19,7 @@ import type {
   RpcStatus,
   V1GetChoicesResponse,
   V1GetLeaderboardResponse,
+  V1GetTopJokesResponse,
 } from '../models/index';
 import {
     ArenaRateChoicesBodyFromJSON,
@@ -29,6 +30,8 @@ import {
     V1GetChoicesResponseToJSON,
     V1GetLeaderboardResponseFromJSON,
     V1GetLeaderboardResponseToJSON,
+    V1GetTopJokesResponseFromJSON,
+    V1GetTopJokesResponseToJSON,
 } from '../models/index';
 
 export interface ArenaGetChoicesRequest {
@@ -98,6 +101,32 @@ export class ArenaApi extends runtime.BaseAPI {
      */
     async arenaGetLeaderboard(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<V1GetLeaderboardResponse> {
         const response = await this.arenaGetLeaderboardRaw(initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Gets the top jokes.
+     */
+    async arenaGetTopJokesRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<V1GetTopJokesResponse>> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        const response = await this.request({
+            path: `/v1/top-jokes`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => V1GetTopJokesResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Gets the top jokes.
+     */
+    async arenaGetTopJokes(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<V1GetTopJokesResponse> {
+        const response = await this.arenaGetTopJokesRaw(initOverrides);
         return await response.value();
     }
 

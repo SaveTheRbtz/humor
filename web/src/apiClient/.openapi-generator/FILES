@@ -6,7 +6,9 @@ models/ProtobufAny.ts
 models/RpcStatus.ts
 models/V1GetChoicesResponse.ts
 models/V1GetLeaderboardResponse.ts
+models/V1GetTopJokesResponse.ts
 models/V1LeaderboardEntry.ts
+models/V1TopJokesEntry.ts
 models/V1Winner.ts
 models/index.ts
 runtime.ts

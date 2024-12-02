@@ -14,7 +14,7 @@
 
 import { mapValues } from '../runtime';
 /**
- * 
+ * GetChoicesResponse is a response to the GetChoicesRequest.
  * @export
  * @interface V1GetChoicesResponse
  */

@@ -22,6 +22,7 @@ const Header: React.FC = () => {
         <ul className={`menu ${isMenuOpen ? 'menu-open' : ''}`}>
           <li><a href="/arena">Arena (side-by-side)</a></li>
           <li><a href="/leaderboard">Leaderboard</a></li>
+          <li><a href="/top-jokes">Top Jokes (beta)</a></li>
           <li><a href="/">About</a></li>
         </ul>
       </nav>
