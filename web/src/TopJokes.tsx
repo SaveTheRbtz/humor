@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { FaTwitter } from 'react-icons/fa';
 import './TopJokes.css';
 import { ArenaApi, Configuration, V1GetTopJokesResponse, V1TopJokesEntry } from './apiClient';
 
@@ -10,6 +11,12 @@ const TopJokes: React.FC = () => {
   const [topJokesEntries, setTopJokesEntries] = useState<V1TopJokesEntry[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+
+  const handleShare = (jokeText: string) => {
+    const tweetText = `${jokeText}\n\nhttps://humor.ph34r.me/arena #humorarena`;
+    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
+    window.open(twitterUrl, '_blank');
+  };
 
   const fetchTopJokes = async () => {
     setLoading(true);
@@ -56,16 +63,25 @@ const TopJokes: React.FC = () => {
           <tr>
             <th>Rank</th>
             <th>Joke</th>
+            <th>Share</th>
           </tr>
         </thead>
         <tbody>
-          {topJokesEntries
-            .map((entry, _) => (
-              <tr key={entry.rank}>
-                <td>{entry.rank}</td>
-                <td>{entry.text}</td>
-              </tr>
-            ))}
+          {topJokesEntries.map((entry) => (
+            <tr key={entry.rank}>
+              <td>{entry.rank}</td>
+              <td>{entry.text}</td>
+              <td>
+                <button
+                  className="share-icon-top-jokes"
+                  onClick={() => handleShare(entry.text!)}
+                  aria-label="Share on Twitter"
+                >
+                  <FaTwitter size={24} color="#1DA1F2" />
+                </button>
+              </td>
+            </tr>
+          ))}
         </tbody>
       </table>
     </div>

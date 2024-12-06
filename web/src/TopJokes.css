@@ -84,3 +84,14 @@
 .about-container a:hover {
     text-decoration: underline;
 }
+
+.share-icon-top-jokes {
+    border: none;
+    background: none;
+    cursor: pointer;
+    padding: 0;
+}
+
+.share-icon-top-jokes:hover svg {
+    filter: brightness(0.8);
+}
