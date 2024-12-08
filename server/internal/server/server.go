@@ -48,6 +48,7 @@ type themesCache struct {
 type Theme struct {
 	Text   string  `firestore:"text"`
 	Random float64 `firestore:"random"`
+	Active bool    `firestore:"active"`
 }
 
 type Joke struct {
@@ -57,6 +58,7 @@ type Joke struct {
 	Random  float64 `firestore:"random"`
 	Model   string  `firestore:"model"`
 	Policy  string  `firestore:"policy"`
+	Active  bool    `firestore:"active"`
 }
 
 type Choice struct {

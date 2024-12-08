@@ -88,6 +88,7 @@ func addTheme(
 	theme := serverImpl.Theme{
 		Text:   themeName,
 		Random: rnd,
+		Active: true,
 	}
 	docRef, _, err := client.Collection("themes").Add(ctx, theme)
 	return docRef, err
@@ -106,6 +107,7 @@ func addJoke(ctx context.Context,
 		Text:    text,
 		Model:   fmt.Sprintf("dad-%d", rand.Intn(3)),
 		Random:  rnd,
+		Active:  true,
 	}
 	_, _, err := client.Collection("jokes").Add(ctx, joke)
 	return err

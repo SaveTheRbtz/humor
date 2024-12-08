@@ -74,6 +74,7 @@ def import_data(jokes_file, project, dry_run):
                 "theme_set": "v2",
                 "theme_id": theme_text_map[theme].id,
                 "random": random.random(),
+                "active": True,
             }
             if dry_run:
                 logging.info(f"Would create joke: {joke_doc}")

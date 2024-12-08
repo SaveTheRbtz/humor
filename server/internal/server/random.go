@@ -63,26 +63,37 @@ func (r *randomDocumentGetterImpl[T]) GetRandomDocuments(
 			})
 		}
 	}
-	if docs == nil || len(docs) == 0 {
+	// TODO(rbtz): generalize to weight.
+	var activeDocs []*firestore.DocumentSnapshot
+	for _, doc := range docs {
+		active_raw := doc.Data()["active"]
+		if active_raw == nil {
+			continue
+		}
+		if active := active_raw.(bool); active {
+			activeDocs = append(activeDocs, doc)
+		}
+	}
+	if activeDocs == nil || len(activeDocs) == 0 {
 		return nil, nil, fmt.Errorf("no documents found")
 	}
-	if len(docs) < limit {
+	if len(activeDocs) < limit {
 		return nil, nil, fmt.Errorf("not enough documents found")
 	}
 
-	r.random.Shuffle(len(docs), func(i, j int) {
-		docs[i], docs[j] = docs[j], docs[i]
+	r.random.Shuffle(len(activeDocs), func(i, j int) {
+		activeDocs[i], activeDocs[j] = activeDocs[j], activeDocs[i]
 	})
 	if len(docs) > limit {
-		docs = docs[:limit]
+		activeDocs = activeDocs[:limit]
 	}
 
-	objs := make([]T, len(docs))
-	for i, doc := range docs {
+	objs := make([]T, len(activeDocs))
+	for i, doc := range activeDocs {
 		if err := doc.DataTo(&objs[i]); err != nil {
 			return nil, nil, fmt.Errorf("failed to decode document: %w", err)
 		}
 	}
 
-	return objs, docs, nil
+	return objs, activeDocs, nil
 }
