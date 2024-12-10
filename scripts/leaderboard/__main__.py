@@ -146,7 +146,7 @@ def run_once(firestore_client: firestore.Client) -> None:
         raise NoRatedChoices(f"No rated choices found. Total choices: {total_choices}")
 
     joke_map: dict[str, Any] = {}
-    jokes_docs = firestore_client.collection("jokes").stream()
+    jokes_docs = firestore_client.collection("jokes").where('active', '==', True).stream()
     for doc in jokes_docs:
         jokes_dict = doc.to_dict()
         if jokes_dict is None:
