@@ -5,12 +5,24 @@
 
 manifest:
   modules_mapping:
+    aiohappyeyeballs: aiohappyeyeballs
+    aiohttp: aiohttp
+    aiosignal: aiosignal
+    annotated_types: annotated_types
+    anyio: anyio
+    attr: attrs
+    attrs: attrs
     cachetools: cachetools
     certifi: certifi
     charset_normalizer: charset_normalizer
     click: click
     dateutil: python_dateutil
+    distro: distro
+    dotenv: python_dotenv
     evalica: evalica
+    filelock: filelock
+    frozenlist: frozenlist
+    fsspec: fsspec
     google.api.annotations_pb2: googleapis_common_protos
     google.api.auth_pb2: googleapis_common_protos
     google.api.backend_pb2: googleapis_common_protos
@@ -94,18 +106,46 @@ manifest:
     google.type.timeofday_pb2: googleapis_common_protos
     grpc: grpcio
     grpc_status: grpcio_status
+    h11: h11
+    httpcore: httpcore
+    httpx: httpx
+    huggingface_hub: huggingface_hub
     idna: idna
+    importlib_metadata: importlib_metadata
+    jinja2: jinja2
+    jiter: jiter
+    jsonschema: jsonschema
+    jsonschema_specifications: jsonschema_specifications
+    litellm: litellm
+    markupsafe: MarkupSafe
+    multidict: multidict
     numpy: numpy
+    openai: openai
+    packaging: packaging
     pandas: pandas
+    propcache: propcache
     proto: proto_plus
     pyasn1: pyasn1
     pyasn1_modules: pyasn1_modules
+    pydantic: pydantic
+    pydantic_core: pydantic_core
     pytz: pytz
+    referencing: referencing
+    regex: regex
     requests: requests
+    rpds: rpds_py
     rsa: rsa
     six: six
+    sniffio: sniffio
+    tiktoken: tiktoken
+    tiktoken_ext.openai_public: tiktoken
+    tokenizers: tokenizers
     tqdm: tqdm
+    typing_extensions: typing_extensions
     tzdata: tzdata
     urllib3: urllib3
+    yaml: PyYAML
+    yarl: yarl
+    zipp: zipp
   pip_repository:
     name: pip

@@ -4,3 +4,4 @@ google-cloud-firestore
 numpy
 requests
 tqdm
+litellm
