@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import argparse
 import datetime
 import json
@@ -6,10 +8,13 @@ import os
 import re
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from multiprocessing import cpu_count
-from typing import Any
+from typing import Any, TypeVar
 
-from litellm import completion
+import litellm
+from pydantic import BaseModel
 from tqdm import tqdm
+
+litellm.enable_json_schema_validation = True
 
 SYSTEM = "system"
 USER = "user"
@@ -18,11 +23,17 @@ ROLE = "role"
 CONTENT = "content"
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 
 
 def now() -> str:
     return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+
+class ResponseType(BaseModel): ...
+
+
+T = TypeVar("T", bound=ResponseType, covariant=True)
 
 
 def magic_query(
@@ -31,49 +42,62 @@ def magic_query(
     model: str,
     temp: float = 0.01,
     max_tokens: int = 500,
-) -> str:
+    response_format: type[T],
+) -> T:
     request = {
         "model": model,
         "temperature": temp,
         "max_tokens": max_tokens,
         "messages": prompt,
+        "response_format": response_format,
     }
-    response = completion(**request)
-    response_text = response["choices"][0]["message"]["content"]
-    return response_text
+    response = litellm.completion(**request)
+    response_cls = response["choices"][0]["message"]["content"]
+    return response_format.model_validate_json(response_cls, strict=True)
 
 
-def get_associations(theme: str, model: str) -> str:
+class AssociationList(ResponseType):
+    associations: list[str]
+
+
+def get_associations(theme: str, model: str) -> list[str]:
     p: list[dict[str, str]] = []
     p.append(
         {
             ROLE: SYSTEM,
-            CONTENT: """Given the theme, provide a numbered list of 20 free associations with it: different meanings, different contexts, stereotypes, puns, exaggerations, incongruity, cultural references, juxtaposition. Use short descriptions -- 1-5 words each.""",
+            CONTENT: """Given the theme, provide a list of 20 free associations with it: different meanings, different contexts, stereotypes, puns, exaggerations, incongruity, cultural references, juxtaposition. Use short descriptions -- 1-5 words each.""",
         }
     )
     p.append({ROLE: USER, CONTENT: f"Theme: {theme}"})
 
-    associations = magic_query(p, model=model, max_tokens=4000)
-    return associations
+    associations = magic_query(p, model=model, max_tokens=4000, response_format=AssociationList)
+    return associations.associations
 
 
-def expand_associations(theme: str, associations: str, model: str) -> str:
+class ExpandedAssociations(ResponseType):
+    expanded_associations: list[str]
+
+
+def expand_associations(theme: str, associations: str, model: str) -> list[str]:
     p: list[dict[str, str]] = []
     p.append(
         {
             ROLE: SYSTEM,
             CONTENT: """Read the theme and the list of associations with it.
 Rewrite and expand each of the associations into longer and more detailed (10-15 words each). 
-Avoid repetitions and usage the similar words across the sentences. Keep mentioning the original theme.
-Provide a numbered list as a result.""",
+Avoid repetitions and usage the similar words across the sentences. Keep mentioning the original theme.""",
         }
     )
     p.append({ROLE: USER, CONTENT: f"Theme: {theme}\n\nAssociations:\n{associations}"})
-    res = magic_query(p, model=model, max_tokens=4000)
-    return res
+    res = magic_query(p, model=model, max_tokens=4000, response_format=ExpandedAssociations)
+    return res.expanded_associations
 
 
-def refine_associations(theme: str, associations: str, model: str) -> str:
+class RefinedAssociations(ResponseType):
+    refined_associations: list[str]
+
+
+def refine_associations(theme: str, associations: str, model: str) -> list[str]:
     p: list[dict[str, str]] = []
     p.append(
         {
@@ -82,16 +106,19 @@ def refine_associations(theme: str, associations: str, model: str) -> str:
 Write a shorter list of items using the following rules:
 - Complementary items can be grouped into one item that combines the original descriptions.
 - Weak, unsuccessful, or poorly related items to the original topic should be deleted.
-- The final list should be no longer than 8 items, different items should have different meanings or contexts.
-Provide a numbered list as a result.""",
+- The final list should be no longer than 8 items, different items should have different meanings or contexts.""",
         }
     )
     p.append({ROLE: USER, CONTENT: f"Theme: {theme}\n\nAssociations:\n{associations}"})
-    res = magic_query(p, model=model, max_tokens=4000)
-    return res
+    res = magic_query(p, model=model, max_tokens=4000, response_format=RefinedAssociations)
+    return res.refined_associations
 
 
-def make_jokes(theme: str, associations: str, model: str) -> str:
+class Jokes(ResponseType):
+    jokes: list[str]
+
+
+def make_jokes(theme: str, associations: str, model: str) -> list[str]:
     p: list[dict[str, str]] = []
     p.append(
         {
@@ -109,27 +136,25 @@ Based on that information, write a list of 7-10 jokes using the following rules:
   - Dark Humor
   - Juxtaposition
 
-Use these general principles (Anthropomorphism, Visual Imagery, Absurdity, Incongruity, Misdirection).
-Provide a numbered list as a result.""",
+Use these general principles (Anthropomorphism, Visual Imagery, Absurdity, Incongruity, Misdirection).""",
         }
     )
     p.append({ROLE: USER, CONTENT: f"Theme: {theme}\n\nAssociations:\n{associations}"})
-    res = magic_query(p, model=model, max_tokens=4000)
-    return res
+    res = magic_query(p, model=model, max_tokens=4000, response_format=Jokes)
+    return res.jokes
 
 
-def make_jokes_ablated(theme: str, model: str) -> str:
+def make_jokes_ablated(theme: str, model: str) -> list[str]:
     p: list[dict[str, str]] = []
     p.append(
         {
             ROLE: SYSTEM,
-            CONTENT: """Read the theme and write a list of 7-10 jokes on that theme.
-Provide a numbered list as a result.""",
+            CONTENT: """Read the theme and write a list of 7-10 jokes on that theme.""",
         }
     )
     p.append({ROLE: USER, CONTENT: f"Theme: {theme}"})
-    res = magic_query(p, model=model, max_tokens=4000)
-    return res
+    res = magic_query(p, model=model, max_tokens=4000, response_format=Jokes)
+    return res.jokes
 
 
 parser = argparse.ArgumentParser(description="Process themes with humor generation.")
@@ -142,6 +167,11 @@ parser.add_argument(
 )
 args = parser.parse_args()
 
+assert litellm.supports_response_schema(
+    model=args.model, custom_llm_provider=None
+), f"Model {args.model} does not support response schema"
+
+
 mmodel = args.model.split("/")[1]
 os.makedirs("output", exist_ok=True)
 
@@ -152,25 +182,28 @@ def process_theme(theme: str, model: str) -> dict[str, Any]:
     output["ts0"] = now()
     logger.debug("Timestamp ts0: %s", output["ts0"])
 
-    output["step1"] = get_associations(theme, model)
+    assocs_v1 = get_associations(theme, model)
+    output["step1"] = assocs_v1
     logger.debug("Step1 output: %s", output["step1"])
 
     output["ts1"] = now()
     logger.debug("Timestamp ts1: %s", output["ts1"])
 
-    output["step2"] = expand_associations(theme, output["step1"], model)
+    assocs_v2 = expand_associations(theme, "\n".join(assocs_v1), model)
+    output["step2"] = assocs_v2
     logger.debug("Step2 output: %s", output["step2"])
 
     output["ts2"] = now()
     logger.debug("Timestamp ts2: %s", output["ts2"])
 
-    output["step3"] = refine_associations(theme, output["step2"], model)
+    assocs_v3 = refine_associations(theme, "\n".join(assocs_v2), model)
+    output["step3"] = assocs_v3
     logger.debug("Step3 output: %s", output["step3"])
 
     output["ts3"] = now()
     logger.debug("Timestamp ts3: %s", output["ts3"])
 
-    output["step4"] = make_jokes(theme, output["step3"], model)
+    output["step4"] = make_jokes(theme, "\n".join(assocs_v3), model)
     logger.debug("Step4 output: %s", output["step4"])
 
     output["ts4"] = now()
@@ -200,4 +233,4 @@ with ThreadPoolExecutor(max_workers=args.max_workers) as executor:
             result = future.result()
             logger.debug("Completed processing theme: %s", theme)
         except Exception as e:
-            logger.error("Error processing theme '%s': %s", theme, e)
+            logger.exception("Error processing theme '%s': %s", theme, e)
