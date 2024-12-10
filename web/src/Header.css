@@ -2,10 +2,13 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem;
+    padding: 0.5rem;
     background-color: #333;
     color: #fff;
-    position: relative;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
     z-index: 1000;
 }
 
@@ -48,10 +51,12 @@
     display: flex;
     gap: 1rem;
     margin: 0;
+    margin-right: 0.5rem;
 }
 
 .menu li {
     margin: 0;
+    margin-right: 0.5rem;
 }
 
 .menu a {
@@ -66,6 +71,7 @@
 
 @media (max-width: 768px) {
     .burger {
+        margin-right: 2rem;
         display: flex;
     }
 
