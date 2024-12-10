@@ -49,16 +49,13 @@ const Leaderboard: React.FC = () => {
 
   return (
     <div className="leaderboard-container">
-      <h1>Leaderboard</h1>
+      <h1>Model Leaderboard</h1>
       <table className="leaderboard-table">
         <thead>
           <tr>
             <th>Rank</th>
             <th>Model</th>
             <th>Votes</th>
-            <th>
-              ELO
-            </th>
             <th>
               Newman
               <span className="tooltip" onClick={toggleTooltip}>
@@ -73,26 +70,29 @@ const Leaderboard: React.FC = () => {
                 )}
               </span>
             </th>
+            <th>
+              Elo
+            </th>
           </tr>
         </thead>
         <tbody>
           {leaderboardEntries
-            .sort((a, b) => b.eloScore! - a.eloScore!)
+            .sort((a, b) => b.newmanScore! - a.newmanScore!)
             .map((entry, index) => (
               <tr key={entry.model}>
                 <td>{index + 1}</td>
                 <td>{entry.model}</td>
                 <td>{entry.votes}</td>
                 <td>
-                  {entry.eloScore!.toFixed(0)}
-                  <span className="ci">
-                    &nbsp;+{entry.eloCIUpper!.toFixed(0)}/-{entry.eloCILower!.toFixed(0)}
-                  </span>
-                </td>
-                <td>
                   {entry.newmanScore!.toFixed(2)}
                   <span className="ci">
                     &nbsp;+{entry.newmanCIUpper!.toFixed(2)}/-{entry.newmanCILower!.toFixed(2)}
+                  </span>
+                </td>
+                <td>
+                  {entry.eloScore!.toFixed(0)}
+                  <span className="ci">
+                    &nbsp;+{entry.eloCIUpper!.toFixed(0)}/-{entry.eloCILower!.toFixed(0)}
                   </span>
                 </td>
               </tr>
