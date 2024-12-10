@@ -146,7 +146,7 @@ def run_once(firestore_client: firestore.Client) -> None:
         raise NoRatedChoices(f"No rated choices found. Total choices: {total_choices}")
 
     joke_map: dict[str, Any] = {}
-    jokes_docs = firestore_client.collection("jokes").stream()
+    jokes_docs = firestore_client.collection("jokes").where("active", "==", True).stream()
     for doc in jokes_docs:
         jokes_dict = doc.to_dict()
         if jokes_dict is None:
@@ -155,6 +155,7 @@ def run_once(firestore_client: firestore.Client) -> None:
 
     model_votes: defaultdict[str, int] = defaultdict(int)
     for choice in choices:
+        found_models: set[str] = set()
         for joke_id in (choice.get("left_joke_id"), choice.get("right_joke_id")):
             if joke_id is None:
                 continue
@@ -164,7 +165,11 @@ def run_once(firestore_client: firestore.Client) -> None:
             model = joke.get("model")
             if model is None:
                 continue
-            model_votes[model] += 1
+            found_models.add(model)
+
+        if len(found_models) == 2:
+            for model in found_models:
+                model_votes[model] += 1
 
     xs: list[str] = []
     ys: list[str] = []
@@ -248,7 +253,9 @@ def run_once(firestore_client: firestore.Client) -> None:
         elo_val = elo_result.scores.get(model_name, 0.0)
         elo_ci = confidence_intervals.get("elo", {}).get(model_name, (elo_val, elo_val, elo_val))
         newman_val = newman_result.scores.get(model_name, 0.0)
-        newman_ci = confidence_intervals.get("newman", {}).get(model_name, (newman_val, newman_val, newman_val))
+        newman_ci = confidence_intervals.get("newman", {}).get(
+            model_name, (newman_val, newman_val, newman_val)
+        )
         logger.info(
             f"Leaderboard entry: {model_name=}, {votes_count=}, {elo_val=}, {elo_ci=}, {newman_val=}, {newman_ci=}"
         )
