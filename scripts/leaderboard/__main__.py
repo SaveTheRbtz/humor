@@ -61,7 +61,7 @@ def bootstrap_confidence_intervals(
     rating_systems: dict[str, RatingSystemProtocol],
     n_bootstrap: int = 1000,
     confidence: float = 0.95,
-) -> dict[str, dict[str, tuple[float, float]]]:
+) -> dict[str, dict[str, tuple[float, float, float]]]:
     """
     Perform bootstrap sampling of (xs, ys, outcomes) for multiple rating systems to estimate confidence intervals.
     Returns a dictionary keyed by rating system name, whose values are dictionaries keyed by model with
@@ -97,8 +97,10 @@ def bootstrap_confidence_intervals(
                 continue
 
             lower_index = int((1.0 - confidence) / 2 * dist_length)
+            median_index = int(0.5 * dist_length) - 1
             upper_index = int((1.0 + confidence) / 2 * dist_length) - 1
 
+            median_index = max(0, median_index)
             if lower_index < 0:
                 lower_index = 0
             if upper_index < 0:
@@ -110,6 +112,7 @@ def bootstrap_confidence_intervals(
 
             system_conf_intervals[model_name] = (
                 dist_sorted[lower_index],
+                dist_sorted[median_index],
                 dist_sorted[upper_index],
             )
         confidence_intervals[system_name] = system_conf_intervals
@@ -243,26 +246,26 @@ def run_once(firestore_client: firestore.Client) -> None:
     for model_name in model_votes.keys():
         votes_count = model_votes.get(model_name, 0)
         elo_val = elo_result.scores.get(model_name, 0.0)
-        elo_ci = confidence_intervals.get("elo", {}).get(model_name, (elo_val, elo_val))
+        elo_ci = confidence_intervals.get("elo", {}).get(model_name, (elo_val, elo_val, elo_val))
         newman_val = newman_result.scores.get(model_name, 0.0)
-        newman_ci = confidence_intervals.get("newman", {}).get(model_name, (newman_val, newman_val))
+        newman_ci = confidence_intervals.get("newman", {}).get(model_name, (newman_val, newman_val, newman_val))
         logger.info(
             f"Leaderboard entry: {model_name=}, {votes_count=}, {elo_val=}, {elo_ci=}, {newman_val=}, {newman_ci=}"
         )
 
-        elo_ci_lower_diff = float(elo_val - elo_ci[0])  # difference to lower CI boundary
-        elo_ci_upper_diff = float(elo_ci[1] - elo_val)  # difference to upper CI boundary
-        newman_ci_lower_diff = float(newman_val - newman_ci[0])
-        newman_ci_upper_diff = float(newman_ci[1] - newman_val)
+        elo_ci_lower_diff = elo_ci[1] - elo_ci[0]  # difference to lower CI boundary
+        elo_ci_upper_diff = elo_ci[2] - elo_ci[1]  # difference to upper CI boundary
+        newman_ci_lower_diff = newman_ci[1] - newman_ci[0]
+        newman_ci_upper_diff = newman_ci[2] - newman_ci[1]
 
         leaderboard.append(
             LeaderboardEntry(
                 model=model_name,
                 votes=votes_count,
-                elo_score=float(elo_val),
+                elo_score=elo_ci[1],
                 elo_ci_lower=elo_ci_lower_diff,
                 elo_ci_upper=elo_ci_upper_diff,
-                newman_score=float(newman_val),
+                newman_score=newman_ci[1],
                 newman_ci_lower=newman_ci_lower_diff,
                 newman_ci_upper=newman_ci_upper_diff,
             )
