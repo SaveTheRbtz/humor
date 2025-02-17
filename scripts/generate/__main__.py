@@ -8,10 +8,13 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from multiprocessing import cpu_count
 from typing import Any
 
+import litellm
 from litellm import completion
 from tqdm import tqdm
 
-SYSTEM = "system"
+litellm.set_verbose=True
+
+SYSTEM = "user"
 USER = "user"
 
 ROLE = "role"
@@ -34,8 +37,9 @@ def magic_query(
 ) -> str:
     request = {
         "model": model,
-        "temperature": temp,
-        "max_tokens": max_tokens,
+        #"temperature": temp,
+        #"max_tokens": max_tokens,
+        "max_completion_tokens": max_tokens,
         "messages": prompt,
     }
     response = completion(**request)

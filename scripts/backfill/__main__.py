@@ -17,6 +17,7 @@ from tqdm import tqdm
 logging.basicConfig(level=logging.INFO)
 
 MODEL_CODES = {
+    "o1-2024-12-17": "alpha-alizarin",
     "gpt-4o-2024-11-20": "tango-turquoise",
     "o1-preview_ablated": "foxtrot-palegreen",
     "claude-3-5-haiku-20241022": "hotel-honeydew",
