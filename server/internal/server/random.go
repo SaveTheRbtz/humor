@@ -64,7 +64,7 @@ func (r *randomDocumentGetterImpl[T]) GetRandomDocuments(
 		}
 	}
 	// TODO(rbtz): generalize to weight.
-	var activeDocs []*firestore.DocumentSnapshot
+	activeDocs := make([]*firestore.DocumentSnapshot, 0, len(docs))
 	for _, doc := range docs {
 		active_raw := doc.Data()["active"]
 		if active_raw == nil {
@@ -74,11 +74,8 @@ func (r *randomDocumentGetterImpl[T]) GetRandomDocuments(
 			activeDocs = append(activeDocs, doc)
 		}
 	}
-	if activeDocs == nil || len(activeDocs) == 0 {
-		return nil, nil, fmt.Errorf("no documents found")
-	}
 	if len(activeDocs) < limit {
-		return nil, nil, fmt.Errorf("not enough documents found")
+		return nil, nil, fmt.Errorf("not enough documents found: %d < %d", len(activeDocs), limit)
 	}
 
 	r.random.Shuffle(len(activeDocs), func(i, j int) {
