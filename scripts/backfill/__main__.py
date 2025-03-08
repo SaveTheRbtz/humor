@@ -23,6 +23,8 @@ MODEL_CODES = {
     "claude-3-5-haiku-20241022": "hotel-honeydew",
     "claude-3-opus-20240229": "oscar-olive",
     "claude-3-5-sonnet-20241022": "sierra-salmon",
+    "gpt-4.5-preview": "yankee-yellow",
+    "claude-3-7-sonnet-20250219": "zulu-zinnia",
 }
 
 
@@ -39,6 +41,7 @@ def import_data(jokes_file, project, dry_run):
         for line in tqdm(csv.DictReader(f, delimiter="\t", fieldnames=["model", "theme", "text"])):
             model, theme, text = line["model"].strip(), line["theme"].strip(), line["text"].strip()
             if not model or not theme or not text:
+                logging.warning(f"Missing data: {model}, {theme}, {text}")
                 continue
             if len(text) < 20:
                 logging.warning(f"Joke too short: {text}")
