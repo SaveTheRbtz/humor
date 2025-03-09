@@ -8,6 +8,8 @@ from dataclasses import asdict, dataclass
 from enum import Enum
 from typing import Any, Callable, Protocol
 
+import numpy as np
+
 from evalica import Winner, elo, newman
 from google.cloud import firestore
 from google.cloud.firestore_v1 import FieldFilter
@@ -207,7 +209,11 @@ def run_once(firestore_client: firestore.Client) -> None:
             skip_count += 1
             continue
         if left_model == right_model:
+            skip_count += 1
             logger.debug("Skipping same model: %s", left_model)
+            continue
+        if w == WinnerEnum.NONE:
+            skip_count += 1
             continue
 
         xs.append(left_model)
@@ -217,11 +223,15 @@ def run_once(firestore_client: firestore.Client) -> None:
                 outcomes.append(Winner.X)
             case WinnerEnum.RIGHT:
                 outcomes.append(Winner.Y)
-            case WinnerEnum.BOTH | WinnerEnum.NONE:
+            case WinnerEnum.BOTH:
                 outcomes.append(Winner.Draw)
+            case WinnerEnum.NONE:
+                raise ValueError("WinnerEnum.NONE should have been filtered out above")
     logger.info(
         f"Choices processed successfully: {len(xs)=}, {len(ys)=}, {len(outcomes)=}, {skip_count=}"
     )
+    assert len(xs) == len(ys) == len(outcomes)
+
     if not xs or not ys or not outcomes:
         raise NoRatedChoices("No valid comparisons found.")
 
@@ -299,6 +309,39 @@ def run_once(firestore_client: firestore.Client) -> None:
             if doc.get("created_at") > time_threshold:
                 continue
             batch.delete(doc.reference)
+    logger.info("Expired choices removed successfully")
+
+    # create a np matrix of votes for every model against every other model and normalize it based on xs and ys
+    model_votes_array: np.ndarray = np.zeros((len(model_votes), len(model_votes)))
+    for i, x in enumerate(model_votes.keys()):
+        for j, y in enumerate(model_votes.keys()):
+            if x == y:
+                continue
+            model_votes_array[i, j] = model_votes[x] / (model_votes[x] + model_votes[y])
+    model_votes_array = model_votes_array / np.sum(model_votes_array, axis=1)[:, np.newaxis]
+    model_votes_array = np.nan_to_num(model_votes_array, nan=0.0, posinf=0.0, neginf=0.0)
+    logger.info(
+        "\n".join([
+            "Model votes matrix computed successfully.",
+            "weights:",
+            f"{model_votes_array}",
+            "models:",
+            f"{list(model_votes.keys())}",
+        ])
+    )
+
+    # save matrix to firestore
+    model_votes_doc = {
+        "shape": model_votes_array.shape,
+        "model_weights": model_votes_array.flatten().tolist(),
+        "models": list(model_votes.keys()),
+        "created_at": firestore.SERVER_TIMESTAMP,
+    }
+    model_votes_ref = firestore_client.collection("model_weights").document()
+    model_votes_ref.set(model_votes_doc)
+    logger.info(f"Model weights document details: {model_votes_doc}")
+
+    logger.info("Run once function executed successfully.")
 
 
 run_once(
