@@ -11,14 +11,17 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	insecureRand "math/rand/v2"
 	"time"
+
+	insecureRandExp "golang.org/x/exp/rand"
 
 	choicesv1 "github.com/SaveTheRbtz/humor/gen/go/proto"
 
 	"google.golang.org/api/iterator"
 
 	"github.com/google/uuid"
+
+	"gonum.org/v1/gonum/stat/sampleuv"
 
 	// embed
 	_ "embed"
@@ -77,7 +80,8 @@ type Server struct {
 
 	logger          *zap.Logger
 	firestoreClient *firestore.Client
-	rand            *insecureRand.Rand
+	rand            *insecureRandExp.Rand
+	source          insecureRandExp.Source
 	themeGetter     *randomDocumentGetterImpl[Theme]
 }
 
@@ -93,11 +97,14 @@ func NewServer(
 	if err != nil {
 		return nil, fmt.Errorf("failed to create random theme getter: %w", err)
 	}
+	source := insecureRandExp.NewSource(uint64(time.Now().UnixNano()))
 
 	return &Server{
 		logger:          logger,
 		firestoreClient: firestoreClient,
 		themeGetter:     randomThemeGetter,
+		rand:            insecureRandExp.New(source),
+		source:          source,
 	}, nil
 }
 
@@ -112,21 +119,105 @@ func (s *Server) GetChoices(
 	theme, themeDoc := themes[0], themeDocs[0]
 	s.logger.Debug("GetChoices", zap.String("theme_id", themeDoc.Ref.ID), zap.String("theme_text", theme.Text))
 
-	jokeGetter, err := NewRandomDocumentGetter[Joke](
-		s.firestoreClient,
-		s.firestoreClient.Collection("jokes").Query.Where("theme", "==", theme.Text),
-		time.Duration(0),
-	)
+	// Get model weights
+	// TODO: cache model weights
+	modelWeightsCollection := s.firestoreClient.Collection("model_weights")
+	query := modelWeightsCollection.OrderBy("created_at", firestore.Desc).Limit(1)
+
+	docIter := query.Documents(ctx)
+	docSnap, err := docIter.Next()
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Failed to create random joke getter: %v", err)
+		return nil, fmt.Errorf("failed to get model weights: %w", err)
 	}
 
-	jokes, jokeDocs, err := jokeGetter.GetRandomDocuments(ctx, 2)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Failed to get random jokes: %v", err)
+	var modelWeights struct {
+		ModelWeights []float64 `firestore:"model_weights"`
+		Shape        []int     `firestore:"shape"`
+		Models       []string  `firestore:"models"`
+		CreatedAt    time.Time `firestore:"created_at"`
 	}
-	leftJoke, leftJokeDoc := jokes[0], jokeDocs[0]
-	rightJoke, rightJokeDoc := jokes[1], jokeDocs[1]
+	if err := docSnap.DataTo(&modelWeights); err != nil {
+		return nil, fmt.Errorf("failed to parse model weights document: %w", err)
+	}
+	// reshape model weights
+	modelWeightsMatrix := make([][]float64, modelWeights.Shape[0])
+	for i := range modelWeightsMatrix {
+		modelWeightsMatrix[i] = modelWeights.ModelWeights[i*modelWeights.Shape[1] : (i+1)*modelWeights.Shape[1]]
+	}
+
+	// Get all jokes for a theme
+	allJokeDocs, err := s.firestoreClient.Collection("jokes").Query.Where("theme", "==", theme.Text).Documents(ctx).GetAll()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get jokes: %w", err)
+	}
+
+	// Collect all jokes
+	jokes := make([]Joke, 0)
+	jokeDocs := make([]*firestore.DocumentSnapshot, 0)
+	for _, doc := range allJokeDocs {
+		if active_raw, ok := doc.Data()["active"]; ok {
+			if active := active_raw.(bool); active {
+				var joke Joke
+				if err := doc.DataTo(&joke); err != nil {
+					return nil, fmt.Errorf("failed to parse joke document: %w", err)
+				}
+				jokes = append(jokes, joke)
+				jokeDocs = append(jokeDocs, doc)
+			}
+		}
+	}
+	if len(jokes) < 2 {
+		return nil, status.Errorf(codes.NotFound, "Not enough jokes found: %d, theme: %s", len(jokes), theme.Text)
+	}
+	leftJokeID := s.rand.Int63n(int64(len(jokes)))
+	leftJokeDoc := jokeDocs[leftJokeID]
+	leftJoke := jokes[leftJokeID]
+
+	// get model ID from weighted modelWeights
+	leftModelWeights := make([]float64, 0)
+	foundModelID := -1
+	for modedID, model := range modelWeights.Models {
+		if model == leftJoke.Model {
+			leftModelWeights = modelWeightsMatrix[modedID]
+			foundModelID = modedID
+			break
+		}
+	}
+	if foundModelID == -1 {
+		s.logger.Warn("GetChoices model not found", zap.String("model", leftJoke.Model), zap.String("theme", theme.Text))
+		leftModelWeights = make([]float64, modelWeights.Shape[1])
+		for i := range leftModelWeights {
+			leftModelWeights[i] = 1
+		}
+	}
+
+	// select right joke from filteredJokes based on modelWeightsMatrix
+	rightModelIdx, ok := sampleuv.NewWeighted(leftModelWeights, s.source).Take()
+	if !ok {
+		return nil, status.Errorf(codes.Internal, "failed to select right joke model")
+	}
+	rightModel := modelWeights.Models[rightModelIdx]
+
+	var filteredJokes []Joke
+	var filteredJokeDocs []*firestore.DocumentSnapshot
+	for i, joke := range jokes {
+		if joke.Model != rightModel {
+			continue
+		}
+		if !joke.Active {
+			continue
+		}
+		filteredJokes = append(filteredJokes, joke)
+		filteredJokeDocs = append(filteredJokeDocs, jokeDocs[i])
+	}
+	if len(filteredJokes) < 1 {
+		return nil, status.Errorf(codes.NotFound, "Not enough unique jokes found for the model: %d, theme: %s", len(filteredJokes), theme.Text)
+	}
+
+	rightJokeID := s.rand.Int63n(int64(len(filteredJokes)))
+	rightJokeDoc := filteredJokeDocs[rightJokeID]
+	rightJoke := filteredJokes[rightJokeID]
+
 	s.logger.Debug("GetChoices",
 		zap.String("left_joke_id", leftJokeDoc.Ref.ID),
 		zap.String("left_joke_text", leftJoke.Text),

@@ -7,6 +7,8 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.23.0
 	go.uber.org/zap v1.27.0
+	golang.org/x/exp v0.0.0-20231110203233-9a3e6036ecaa
+	gonum.org/v1/gonum v0.15.1
 	google.golang.org/api v0.205.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20241104194629-dd2ea8efbc28
 	google.golang.org/grpc v1.68.0
