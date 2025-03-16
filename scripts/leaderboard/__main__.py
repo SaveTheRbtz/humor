@@ -9,7 +9,6 @@ from enum import Enum
 from typing import Any, Callable, Protocol
 
 import numpy as np
-
 from evalica import Winner, elo, newman
 from google.cloud import firestore
 from google.cloud.firestore_v1 import FieldFilter
@@ -34,6 +33,8 @@ class WinnerEnum(Enum):
 class LeaderboardEntry:
     model: str
     votes: int
+    votes_good: int
+    votes_bad: int
     elo_score: float
     elo_ci_lower: float
     elo_ci_upper: float
@@ -182,6 +183,8 @@ def run_once(firestore_client: firestore.Client) -> None:
     outcomes: list[Winner] = []
 
     skip_count = 0
+    model_votes_good: defaultdict[str, int] = defaultdict(int)
+    model_votes_bad: defaultdict[str, int] = defaultdict(int)
     for choice in choices:
         left_joke_id = choice.get("left_joke_id")
         right_joke_id = choice.get("right_joke_id")
@@ -217,6 +220,7 @@ def run_once(firestore_client: firestore.Client) -> None:
             logger.debug("Skipping same model: %s", left_model)
             continue
         if w == WinnerEnum.NONE:
+            # If both jokes were bad we can't use this data for rating.
             skip_count += 1
             continue
 
@@ -225,12 +229,18 @@ def run_once(firestore_client: firestore.Client) -> None:
         match w:
             case WinnerEnum.LEFT:
                 outcomes.append(Winner.X)
+                model_votes_good[left_model] += 1
+                model_votes_bad[right_model] += 1
             case WinnerEnum.RIGHT:
                 outcomes.append(Winner.Y)
+                model_votes_good[right_model] += 1
+                model_votes_bad[left_model] += 1
             case WinnerEnum.BOTH:
                 outcomes.append(Winner.Draw)
-            case WinnerEnum.NONE:
-                raise ValueError("WinnerEnum.NONE should have been filtered out above")
+                model_votes_good[left_model] += 1
+                model_votes_good[right_model] += 1
+            case _:
+                raise ValueError(f"Unexpected winner value: {w}")
     logger.info(
         f"Choices processed successfully: {len(xs)=}, {len(ys)=}, {len(outcomes)=}, {skip_count=}"
     )
@@ -283,6 +293,8 @@ def run_once(firestore_client: firestore.Client) -> None:
             LeaderboardEntry(
                 model=model_name,
                 votes=votes_count,
+                votes_good=model_votes_good.get(model_name, 0),
+                votes_bad=model_votes_bad.get(model_name, 0),
                 elo_score=elo_ci[1],
                 elo_ci_lower=elo_ci_lower_diff,
                 elo_ci_upper=elo_ci_upper_diff,
@@ -343,7 +355,6 @@ def run_once(firestore_client: firestore.Client) -> None:
         ])
     )
 
-    # save matrix to firestore
     model_votes_doc = {
         "shape": model_votes_array.shape,
         "model_weights": model_votes_array.flatten().tolist(),

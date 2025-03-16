@@ -82,7 +82,12 @@ const Leaderboard: React.FC = () => {
               <tr key={entry.model}>
                 <td>{index + 1}</td>
                 <td>{entry.model}</td>
-                <td>{entry.votes}</td>
+                <td>
+                  {entry.votes}
+                  <span className="ci">
+                    &nbsp;↑{entry.votesGood!}/↓{entry.votesBad!}
+                  </span>
+                </td>
                 {/* <td>
                   {entry.newmanScore!.toFixed(2)}
                   <span className="ci">

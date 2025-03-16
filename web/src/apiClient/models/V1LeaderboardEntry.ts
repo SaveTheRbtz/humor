@@ -32,6 +32,18 @@ export interface V1LeaderboardEntry {
      */
     votes?: string;
     /**
+     * 
+     * @type {string}
+     * @memberof V1LeaderboardEntry
+     */
+    votesGood?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof V1LeaderboardEntry
+     */
+    votesBad?: string;
+    /**
      * Newman Score of the model.
      * @type {number}
      * @memberof V1LeaderboardEntry
@@ -88,6 +100,8 @@ export function V1LeaderboardEntryFromJSONTyped(json: any, ignoreDiscriminator: 
         
         'model': json['model'] == null ? undefined : json['model'],
         'votes': json['votes'] == null ? undefined : json['votes'],
+        'votesGood': json['votesGood'] == null ? undefined : json['votesGood'],
+        'votesBad': json['votesBad'] == null ? undefined : json['votesBad'],
         'newmanScore': json['newmanScore'] == null ? undefined : json['newmanScore'],
         'newmanCILower': json['newmanCILower'] == null ? undefined : json['newmanCILower'],
         'newmanCIUpper': json['newmanCIUpper'] == null ? undefined : json['newmanCIUpper'],
@@ -105,6 +119,8 @@ export function V1LeaderboardEntryToJSON(value?: V1LeaderboardEntry | null): any
         
         'model': value['model'],
         'votes': value['votes'],
+        'votesGood': value['votesGood'],
+        'votesBad': value['votesBad'],
         'newmanScore': value['newmanScore'],
         'newmanCILower': value['newmanCILower'],
         'newmanCIUpper': value['newmanCIUpper'],

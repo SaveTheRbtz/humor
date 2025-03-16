@@ -238,6 +238,14 @@
           "format": "uint64",
           "description": "Total votes for the model."
         },
+        "votesGood": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "votesBad": {
+          "type": "string",
+          "format": "uint64"
+        },
         "newmanScore": {
           "type": "number",
           "format": "double",

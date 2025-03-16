@@ -35,6 +35,8 @@ var topJokesData string
 type leaderboardEntry struct {
 	Model         string  `firestore:"model"`
 	Votes         int64   `firestore:"votes"`
+	VotesGood     int64   `firestore:"votes_good"`
+	VotesBad      int64   `firestore:"votes_bad"`
 	NewmanScore   float64 `firestore:"newman_score"`
 	NewmanCiLower float64 `firestore:"newman_ci_lower"`
 	NewmanCiUpper float64 `firestore:"newman_ci_upper"`
@@ -338,6 +340,8 @@ func (s *Server) GetLeaderboard(
 		entry := &choicesv1.LeaderboardEntry{
 			Model:         entryData.Model,
 			Votes:         uint64(entryData.Votes),
+			VotesGood:     uint64(entryData.VotesGood),
+			VotesBad:      uint64(entryData.VotesBad),
 			NewmanScore:   entryData.NewmanScore,
 			NewmanCILower: entryData.NewmanCiLower,
 			NewmanCIUpper: entryData.NewmanCiUpper,
