@@ -53,10 +53,10 @@ const Leaderboard: React.FC = () => {
       <table className="leaderboard-table">
         <thead>
           <tr>
-            <th>Rank</th>
+            <th>#</th>
             <th>Model</th>
             <th>Votes</th>
-            <th>
+            {/* <th>
               Newman
               <span className="tooltip" onClick={toggleTooltip}>
                  &#9432;
@@ -69,7 +69,7 @@ const Leaderboard: React.FC = () => {
                   </span>
                 )}
               </span>
-            </th>
+            </th> */}
             <th>
               Elo
             </th>
@@ -77,18 +77,18 @@ const Leaderboard: React.FC = () => {
         </thead>
         <tbody>
           {leaderboardEntries
-            .sort((a, b) => b.newmanScore! - a.newmanScore!)
+            .sort((a, b) => b.eloScore! - a.eloScore!)
             .map((entry, index) => (
               <tr key={entry.model}>
                 <td>{index + 1}</td>
                 <td>{entry.model}</td>
                 <td>{entry.votes}</td>
-                <td>
+                {/* <td>
                   {entry.newmanScore!.toFixed(2)}
                   <span className="ci">
                     &nbsp;+{entry.newmanCIUpper!.toFixed(2)}/-{entry.newmanCILower!.toFixed(2)}
                   </span>
-                </td>
+                </td> */}
                 <td>
                   {entry.eloScore!.toFixed(0)}
                   <span className="ci">
