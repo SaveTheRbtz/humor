@@ -311,14 +311,29 @@ def run_once(firestore_client: firestore.Client) -> None:
             batch.delete(doc.reference)
     logger.info("Expired choices removed successfully")
 
-    # create a np matrix of votes for every model against every other model and normalize it based on xs and ys
-    model_votes_array: np.ndarray = np.zeros((len(model_votes), len(model_votes)))
-    for i, x in enumerate(model_votes.keys()):
-        for j, y in enumerate(model_votes.keys()):
-            if x == y:
-                continue
-            model_votes_array[i, j] = model_votes[x] / (model_votes[x] + model_votes[y])
-    model_votes_array = model_votes_array / np.sum(model_votes_array, axis=1)[:, np.newaxis]
+    # Create a weight matrix that prefers models with fewer votes.
+    models = list(model_votes.keys())
+    n_models = len(models)
+    # Compute the inverse vote weights for each model.
+    # (Adding 1 prevents division by zero if a model has no votes yet.)
+    inverse_votes = {model: 1.0 / (votes + 1) for model, votes in model_votes.items()}
+
+    # Initialize the weight matrix.
+    model_votes_array: np.ndarray = np.zeros((n_models, n_models))
+    for i, left_model in enumerate(models):
+        for j, right_model in enumerate(models):
+            if left_model == right_model:
+                # Exclude self-comparisons.
+                model_votes_array[i, j] = 0.0
+            else:
+                # Use only the inverse vote count of the candidate opponent.
+                model_votes_array[i, j] = inverse_votes[right_model]
+
+    # Row-normalize the matrix so that each row sums to 1.
+    row_sums = np.sum(model_votes_array, axis=1, keepdims=True)
+    model_votes_array = np.divide(
+        model_votes_array, row_sums, out=np.zeros_like(model_votes_array), where=row_sums != 0
+    )
     model_votes_array = np.nan_to_num(model_votes_array, nan=0.0, posinf=0.0, neginf=0.0)
     logger.info(
         "\n".join([
