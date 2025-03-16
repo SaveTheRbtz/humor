@@ -155,6 +155,7 @@ def run_once(firestore_client: firestore.Client) -> None:
             continue
         joke_map[doc.id] = jokes_dict
 
+    model_vote_matrix: defaultdict[tuple[str,str], int] = defaultdict(int)
     model_votes: defaultdict[str, int] = defaultdict(int)
     for choice in choices:
         found_models: set[str] = set()
@@ -170,6 +171,9 @@ def run_once(firestore_client: firestore.Client) -> None:
             found_models.add(model)
 
         if len(found_models) == 2:
+            model_pair = tuple(sorted(found_models))
+            model_vote_matrix[(model_pair[0], model_pair[1])] += 1
+            model_vote_matrix[(model_pair[1], model_pair[0])] += 1
             for model in found_models:
                 model_votes[model] += 1
 
@@ -314,20 +318,14 @@ def run_once(firestore_client: firestore.Client) -> None:
     # Create a weight matrix that prefers models with fewer votes.
     models = list(model_votes.keys())
     n_models = len(models)
-    # Compute the inverse vote weights for each model.
-    # (Adding 1 prevents division by zero if a model has no votes yet.)
-    inverse_votes = {model: 1.0 / (votes + 1) for model, votes in model_votes.items()}
 
     # Initialize the weight matrix.
     model_votes_array: np.ndarray = np.zeros((n_models, n_models))
     for i, left_model in enumerate(models):
         for j, right_model in enumerate(models):
-            if left_model == right_model:
-                # Exclude self-comparisons.
-                model_votes_array[i, j] = 0.0
-            else:
-                # Use only the inverse vote count of the candidate opponent.
-                model_votes_array[i, j] = inverse_votes[right_model]
+            if i == j:
+                continue
+            model_votes_array[i, j] = 1 / (model_vote_matrix.get((left_model, right_model), 0) + 1)
 
     # Row-normalize the matrix so that each row sums to 1.
     row_sums = np.sum(model_votes_array, axis=1, keepdims=True)
