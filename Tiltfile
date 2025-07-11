@@ -34,3 +34,11 @@ local_resource(
     deps=['server/'],
     resource_deps=['populate_database'],
 )
+
+local_resource(
+    'stats',
+    cmd='bazel run -- //scripts/stats:stats_bin test',
+    env={'FIRESTORE_EMULATOR_HOST': 'localhost:8081'},
+    deps=['scripts/stats/'],
+    resource_deps=['firestore_emulator', 'populate_database', 'server'],
+)
