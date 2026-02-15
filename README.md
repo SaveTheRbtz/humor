@@ -2,6 +2,8 @@
 
 # Humor Arena
 
+[**Latest dataset dump (2025-08-12)**](https://raw.githubusercontent.com/SaveTheRbtz/humor/refs/heads/main/data/humor_arena.choices.20250812.json)
+
 It is common ground that modern LLMs are bad at humor generation. Even top-shelf models tend to memorize and repeat a few simple jokes without any originality.
 
 In our recent paper ["Humor Mechanics: Advancing Humor Generation with Multistep Reasoning"](https://computationalcreativity.net/iccc24/papers/ICCC24_paper_128.pdf) (presented at the International Conference on Computational Creativity 2024), we show that the approach based on multistep reasoning can replicate the creativity process good enough to generate jokes which are on par with human-written jokes (with a top quality subset of "reddit jokes" dataset) according to the blind human labeling results. For more details, you can read the [full paper on arXiv](https://arxiv.org/abs/2405.07280). We also shared our [results and data](https://github.com/altsoph/humor-mechanics) to facilitate future research.
