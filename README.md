@@ -19,6 +19,14 @@ Since our goal is to automate machine understanding of humor, here we demonstrat
   journal={arXiv preprint arXiv:2405.07280},
   year={2024}
 }
+
+@misc{Ivanov2025HumorArena,
+  author       = {Alexey Ivanov and Alexey Tikhonov},
+  title        = {{humor}: {LLM} Humor Arena},
+  year         = {2025},
+  howpublished = {\url{https://github.com/SaveTheRbtz/humor}},
+  note         = {GitHub repository. Latest commit on main: 43c4d2f (Jul 11, 2025). Accessed: 2026-02-14.}
+}
 ```
 
 # Build dependencies
